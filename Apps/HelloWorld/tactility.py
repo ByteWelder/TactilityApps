@@ -14,14 +14,14 @@ import shutil
 import configparser
 
 ttbuild_path = ".tactility"
-ttbuild_version = "2.3.0"
+ttbuild_version = "2.3.1"
 ttbuild_cdn = "https://cdn.tactility.one"
 ttbuild_sdk_json_validity = 3600  # seconds
 ttport = 6666
 verbose = False
 use_local_sdk = False
 valid_platforms = ["esp32", "esp32s3"]
-no_anmimations = False
+no_animations = False
 
 spinner_pattern = [
     "⠋",
