@@ -14,7 +14,7 @@ import shutil
 import configparser
 
 ttbuild_path = ".tactility"
-ttbuild_version = "2.3.1"
+ttbuild_version = "2.3.2"
 ttbuild_cdn = "https://cdn.tactility.one"
 ttbuild_sdk_json_validity = 3600  # seconds
 ttport = 6666
@@ -315,10 +315,11 @@ def build_all(version, platforms, skip_build):
         # This can lead to code caching issues, so sometimes a clean build is required
         if find_elf_file(platform) is None:
             if not build_first(version, platform, skip_build):
-                break
+                return False
         else:
             if not build_consecutively(version, platform, skip_build):
-                break
+                return False
+    return True
 
 def wait_for_build(process, platform):
     global no_animations
@@ -467,9 +468,9 @@ def build_action(manifest, platform_arg):
         validate_version_and_platforms(sdk_json, sdk_version, platforms_to_build)
         if not sdk_download_all(sdk_version, platforms_to_build):
             exit_with_error("Failed to download one or more SDKs")
-    build_all(sdk_version, platforms_to_build, skip_build)  # Environment validation
-    if not skip_build:
-        package_all(platforms_to_build)
+    if build_all(sdk_version, platforms_to_build, skip_build):  # Environment validation
+        if not skip_build:
+            package_all(platforms_to_build)
 
 def clean_action():
     if os.path.exists("build"):
