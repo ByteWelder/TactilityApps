@@ -14,3 +14,4 @@ set(EXTRA_COMPONENT_DIRS ${TACTILITY_SDK_PATH})
 
 project(Diceware)
 tactility_project(Diceware)
+

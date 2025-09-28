@@ -10,7 +10,7 @@
 
 constexpr const char* TAG = "Diceware";
 
-void skipNewlines(FILE* file, int count) {
+static void skipNewlines(FILE* file, const int count) {
     char c;
     int count_in_file = 0;
     while (count_in_file < count && fread(&c, 1, 1, file)) {
@@ -20,15 +20,10 @@ void skipNewlines(FILE* file, int count) {
     }
 }
 
-Str readWord(FILE* file) {
+static Str readWord(FILE* file) {
     char c;
     Str result;
-    // Skip dice values
-    fread(&c, 1, 1, file);
-    fread(&c, 1, 1, file);
-    fread(&c, 1, 1, file);
-    fread(&c, 1, 1, file);
-    fread(&c, 1, 1, file);
+    fseek(file, 5, SEEK_CUR); // Skip dice values
     // Read word until newline
     while (fread(&c, 1, 1, file) && c != '\n') {
         result.append(c);
@@ -36,7 +31,7 @@ Str readWord(FILE* file) {
     return result;
 }
 
-Str readWord(AppHandle handle, int index) {
+static Str readWordAtLine(const AppHandle handle, const int lineIndex) {
     char path[256];
     size_t size = 256;
     tt_app_get_assets_child_path(handle, "eff_large_wordlist.txt", path, &size);
@@ -50,7 +45,7 @@ Str readWord(AppHandle handle, int index) {
     if (tt_lock_acquire(lock, TT_MAX_TICKS)) {
         FILE* file = fopen(path, "r");
         if (file != nullptr) {
-            skipNewlines(file, index);
+            skipNewlines(file, lineIndex);
             word = readWord(file);
             fclose(file);
         } else {
@@ -77,7 +72,7 @@ void Application::onClickGenerate(lv_event_t* e) {
     for (int i = 0; i < count; i++) {
         constexpr int line_count = 7776;
         const auto value = rand() % line_count;
-        auto word = readWord(application->handle, value);
+        auto word = readWordAtLine(application->handle, value);
         result.appendf("%s ", word.c_str());
     }
     lv_label_set_text(resultLabel, result.c_str());
@@ -148,8 +143,9 @@ void Application::onShow(AppHandle appHandle, lv_obj_t* parent) {
     lv_obj_set_style_pad_all(result_wrapper, 0, LV_STATE_DEFAULT);
 
     resultLabel = lv_label_create(result_wrapper);
+    lv_label_set_text(resultLabel, "Press Generate button");
+    lv_label_set_long_mode(resultLabel, LV_LABEL_LONG_MODE_WRAP);
     lv_obj_set_size(resultLabel, LV_PCT(100), LV_SIZE_CONTENT);
     lv_obj_set_align(resultLabel, LV_ALIGN_CENTER);
-    lv_label_set_long_mode(resultLabel, LV_LABEL_LONG_MODE_WRAP);
     lv_obj_set_style_text_align(resultLabel, LV_TEXT_ALIGN_CENTER, LV_STATE_DEFAULT);
 }
