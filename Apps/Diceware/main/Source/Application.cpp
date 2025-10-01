@@ -1,23 +1,22 @@
 #include "Application.h"
 
-#include "Str.h"
 #include "esp_log.h"
 
-#include <tt_lvgl_toolbar.h>
 #include <tt_file.h>
 #include <tt_lock.h>
-#include <time.h>
+#include <tt_lvgl.h>
+#include <tt_lvgl_toolbar.h>
 
-constexpr const char* TAG = "Diceware";
+#include <time.h>
+#include <vector>
+#include <bits/stdc++.h>
+
+constexpr char* TAG = "Diceware";
 
 static void skipNewlines(FILE* file, const int count) {
     char c;
     int count_in_file = 0;
-    while (count_in_file < count && fread(&c, 1, 1, file)) {
-        if (c == '\n') {
-            count_in_file++;
-        }
-    }
+    while (count_in_file < count && fread(&c, 1, 1, file)) { if (c == '\n') { count_in_file++; } }
 }
 
 static Str readWord(FILE* file) {
@@ -25,9 +24,7 @@ static Str readWord(FILE* file) {
     Str result;
     fseek(file, 5, SEEK_CUR); // Skip dice values
     // Read word until newline
-    while (fread(&c, 1, 1, file) && c != '\n') {
-        result.append(c);
-    }
+    while (fread(&c, 1, 1, file) && c != '\n') { result.append(c); }
     return result;
 }
 
@@ -48,34 +45,61 @@ static Str readWordAtLine(const AppHandle handle, const int lineIndex) {
             skipNewlines(file, lineIndex);
             word = readWord(file);
             fclose(file);
-        } else {
-            ESP_LOGE(TAG, "Failed to open %s", path);
-        }
+        } else { ESP_LOGE(TAG, "Failed to open %s", path); }
         tt_lock_release(lock);
-    } else {
-        ESP_LOGE(TAG, "Failed to acquire lock for %s", path);
-    }
+    } else { ESP_LOGE(TAG, "Failed to acquire lock for %s", path); }
     tt_lock_free(lock);
     return word;
+}
+
+int32_t Application::jobMain(void* data) {
+    Application* application = static_cast<Application*>(data);
+    timespec time_now;
+    clock_gettime(CLOCK_REALTIME, &time_now);
+    // TODO: Make it more random with iterations and other data (mac/build version/etc. or perhaps touch on the screen)
+    srand(time_now.tv_nsec);
+    Str result;
+    for (int i = 0; i < application->wordCount; i++) {
+        constexpr int line_count = 7776;
+        const auto line_index = rand() % line_count;
+        auto word = readWordAtLine(application->handle, line_index);
+        result.appendf("%s ", word.c_str());
+    }
+
+    application->onFinishJob(result);
+
+    return 0;
+}
+
+void Application::cleanupJob() {
+    if (jobThread != nullptr) {
+        tt_thread_join(jobThread, TT_MAX_TICKS);
+        tt_thread_free(jobThread);
+    }
+}
+
+void Application::startJob(uint32_t jobWordCount) {
+    cleanupJob();
+
+    wordCount = jobWordCount;
+    jobThread = tt_thread_alloc_ext("Diceware", 4096, jobMain, this);
+    tt_thread_start(jobThread);
+}
+
+void Application::onFinishJob(Str result) {
+    tt_lvgl_lock();
+    lv_label_set_text(resultLabel, result.c_str());
+    tt_lvgl_unlock();
 }
 
 void Application::onClickGenerate(lv_event_t* e) {
     auto* application = static_cast<Application*>(lv_event_get_user_data(e));
     auto* spinbox = application->spinbox;
-    auto* resultLabel = application->resultLabel;
-    auto count = lv_spinbox_get_value(spinbox);
-    Str result;
-    timespec time_now;
-    clock_gettime(CLOCK_REALTIME, &time_now);
-    // TODO: Make it more random with iterations and other data (mac/build version/etc. or perhaps touch on the screen)
-    srand(time_now.tv_nsec);
-    for (int i = 0; i < count; i++) {
-        constexpr int line_count = 7776;
-        const auto value = rand() % line_count;
-        auto word = readWordAtLine(application->handle, value);
-        result.appendf("%s ", word.c_str());
-    }
-    lv_label_set_text(resultLabel, result.c_str());
+
+    lv_label_set_text(application->resultLabel, "Generating...");
+
+    const auto word_count = lv_spinbox_get_value(spinbox);
+    application->startJob(word_count);
 }
 
 void Application::onSpinboxDecrement(lv_event_t* e) {
@@ -129,7 +153,7 @@ void Application::onShow(AppHandle appHandle, lv_obj_t* parent) {
     auto* spinbox_inc_button = lv_button_create(top_row_wrapper);
     // lv_obj_align_to(spinbox_inc_button, spinbox, LV_ALIGN_OUT_RIGHT_MID, 5, 0);
     lv_obj_set_style_bg_image_src(spinbox_inc_button, LV_SYMBOL_PLUS, LV_STATE_DEFAULT);
-    lv_obj_add_event_cb(spinbox_inc_button, onSpinboxIncrement, LV_EVENT_SHORT_CLICKED,  spinbox);
+    lv_obj_add_event_cb(spinbox_inc_button, onSpinboxIncrement, LV_EVENT_SHORT_CLICKED, spinbox);
     lv_obj_set_style_pad_all(spinbox_inc_button, 16, LV_STATE_DEFAULT);
 
     // Align spinbox widgets
@@ -149,3 +173,5 @@ void Application::onShow(AppHandle appHandle, lv_obj_t* parent) {
     lv_obj_set_align(resultLabel, LV_ALIGN_CENTER);
     lv_obj_set_style_text_align(resultLabel, LV_TEXT_ALIGN_CENTER, LV_STATE_DEFAULT);
 }
+
+void Application::onHide(AppHandle context) { cleanupJob(); }

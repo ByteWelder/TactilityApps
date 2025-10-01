@@ -1,8 +1,12 @@
 #include <tt_app.h>
 #include "Application.h"
 
-static void onShow(AppHandle appHandle, void* data, lv_obj_t* parent) {
+static void onShowApp(AppHandle appHandle, void* data, lv_obj_t* parent) {
     static_cast<Application*>(data)->onShow(appHandle, parent);
+}
+
+static void onHideApp(AppHandle appHandle, void* data) {
+    static_cast<Application*>(data)->onHide(appHandle);
 }
 
 static void* createApp() {
@@ -16,7 +20,8 @@ static void destroyApp(void* app) {
 ExternalAppManifest manifest = {
     .createData = createApp,
     .destroyData = destroyApp,
-    .onShow = onShow,
+    .onShow = onShowApp,
+    .onHide = onHideApp,
 };
 
 extern "C" {

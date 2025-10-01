@@ -3,8 +3,8 @@
 #include "tt_app.h"
 
 #include <lvgl.h>
-#include "Str.h"
-#include "Dequeue.h"
+#include <deque>
+#include <Str.h>
 
 class Calculator {
 
@@ -17,8 +17,8 @@ class Calculator {
     void handleInput(const char* txt);
     void evaluateExpression();
     double computeFormula();
-    static Dequeue<Str> infixToRPN(const Str& infix);
-    static double evaluateRPN(Dequeue<Str> rpnQueue);
+    static std::deque<Str> infixToRPN(const Str& infix);
+    static double evaluateRPN(std::deque<Str> rpnQueue);
     void resetCalculator();
 
 public:

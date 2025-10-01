@@ -1,11 +1,11 @@
 #include "Calculator.h"
-#include "Stack.h"
 
 #include <cstdio>
 #include <ctype.h>
 #include <tt_lvgl_toolbar.h>
+#include <stack>
 
-constexpr const char* TAG = "Calculator";
+constexpr auto* TAG = "Calculator";
 
 static int precedence(char op) {
     if (op == '+' || op == '-') return 1;
@@ -45,9 +45,9 @@ void Calculator::handleInput(const char* txt) {
     }
 }
 
-Dequeue<Str> Calculator::infixToRPN(const Str& infix) {
-    Stack<char> opStack;
-    Dequeue<Str> output;
+std::deque<Str> Calculator::infixToRPN(const Str& infix) {
+    std::stack<char> opStack;
+    std::deque<Str> output;
     Str token;
     size_t i = 0;
 
@@ -57,19 +57,19 @@ Dequeue<Str> Calculator::infixToRPN(const Str& infix) {
         if (isdigit(ch)) {
             token.clear();
             while (i < infix.length() && (isdigit(infix[i]) || infix[i] == '.')) { token.append(infix[i++]); }
-            output.pushBack(token);
+            output.push_back(token);
             continue;
         }
 
         if (ch == '(') { opStack.push(ch); } else if (ch == ')') {
             while (!opStack.empty() && opStack.top() != '(') {
-                output.pushBack(Str(1, opStack.top()));
+                output.push_back(Str(1, opStack.top()));
                 opStack.pop();
             }
             opStack.pop();
         } else if (strchr("+-*/", ch)) {
             while (!opStack.empty() && precedence(opStack.top()) >= precedence(ch)) {
-                output.pushBack(Str(1, opStack.top()));
+                output.push_back(Str(1, opStack.top()));
                 opStack.pop();
             }
             opStack.push(ch);
@@ -79,19 +79,19 @@ Dequeue<Str> Calculator::infixToRPN(const Str& infix) {
     }
 
     while (!opStack.empty()) {
-        output.pushBack(Str(1, opStack.top()));
+        output.push_back(Str(1, opStack.top()));
         opStack.pop();
     }
 
     return output;
 }
 
-double Calculator::evaluateRPN(Dequeue<Str> rpnQueue) {
-    Stack<double> values;
+double Calculator::evaluateRPN(std::deque<Str> rpnQueue) {
+    std::stack<double> values;
 
     while (!rpnQueue.empty()) {
         Str token = rpnQueue.front();
-        rpnQueue.popFront();
+        rpnQueue.pop_front();
 
         if (isdigit(token[0])) {
             double d;

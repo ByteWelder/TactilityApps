@@ -7,9 +7,9 @@ set(CMAKE_CXX_EXTENSIONS OFF)
 file(GLOB SOURCES "Source/*.c*")
 file(GLOB HEADERS "Include/*.h*")
 
-add_library(NotSoStdlib STATIC)
+add_library(Str STATIC)
 
-target_sources(NotSoStdlib PRIVATE ${SOURCES})
-include_directories(NotSoStdlib "Include/")
-target_include_directories(NotSoStdlib PUBLIC "Include/")
+target_sources(Str PRIVATE ${SOURCES})
+include_directories(Str "Include/")
+target_include_directories(Str PUBLIC "Include/")
 

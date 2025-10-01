@@ -14,7 +14,7 @@ import shutil
 import configparser
 
 ttbuild_path = ".tactility"
-ttbuild_version = "2.3.3"
+ttbuild_version = "2.3.4"
 ttbuild_cdn = "https://cdn.tactility.one"
 ttbuild_sdk_json_validity = 3600  # seconds
 ttport = 6666
@@ -206,7 +206,7 @@ def validate_environment():
         exit_with_error("manifest.properties not found")
     if use_local_sdk == False and os.environ.get("TACTILITY_SDK_PATH") is not None:
         print_warning("TACTILITY_SDK_PATH is set, but will be ignored by this command.")
-        print_warning("If you want to use it, use the 'build local' parameters.")
+        print_warning("If you want to use it, use the '--local-sdk' parameter")
     elif use_local_sdk == True and os.environ.get("TACTILITY_SDK_PATH") is None:
         exit_with_error("local build was requested, but TACTILITY_SDK_PATH environment variable is not set.")
 
