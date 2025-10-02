@@ -7,7 +7,7 @@
 #include <tt_lvgl.h>
 #include <tt_lvgl_toolbar.h>
 
-#include <time.h>
+#include <ctime>
 #include <vector>
 #include <bits/stdc++.h>
 
