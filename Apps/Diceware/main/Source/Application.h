@@ -17,6 +17,7 @@ class Application final {
     static void onClickGenerate(lv_event_t* e);
     static void onSpinboxDecrement(lv_event_t* e);
     static void onSpinboxIncrement(lv_event_t* e);
+    static void onHelpClicked(lv_event_t* e);
 
     static int32_t jobMain(void* data);
 

@@ -1,5 +1,6 @@
 #include "Application.h"
 
+#include <tt_app_alertdialog.h>
 #include <tt_file.h>
 #include <tt_lock.h>
 #include <tt_lvgl.h>
@@ -108,13 +109,19 @@ void Application::onSpinboxIncrement(lv_event_t* e) {
     lv_spinbox_increment(spinbox);
 }
 
+void Application::onHelpClicked(lv_event_t* e) {
+    const char* buttons[] = { "OK" };
+    tt_app_alertdialog_start("Diceware Info", "The hardware random number generator can use the Wi-Fi radio to improve randomness. There's no need to connect to a Wi-Fi network for this to work.", buttons, 1);
+}
+
 void Application::onShow(AppHandle appHandle, lv_obj_t* parent) {
     handle = appHandle;
 
     lv_obj_set_flex_flow(parent, LV_FLEX_FLOW_COLUMN);
     lv_obj_set_style_pad_row(parent, 0, LV_STATE_DEFAULT);
 
-    tt_lvgl_toolbar_create_for_app(parent, appHandle);
+    auto* toolbar = tt_lvgl_toolbar_create_for_app(parent, appHandle);
+    tt_lvgl_toolbar_add_text_button_action(toolbar, "?", onHelpClicked, nullptr);
 
     auto* wrapper = lv_obj_create(parent);
     lv_obj_set_style_border_width(wrapper, 0, LV_STATE_DEFAULT);
@@ -164,7 +171,7 @@ void Application::onShow(AppHandle appHandle, lv_obj_t* parent) {
 
     resultLabel = lv_label_create(result_wrapper);
     // See https://docs.espressif.com/projects/esp-idf/en/latest/esp32/api-reference/system/random.html
-    lv_label_set_text(resultLabel, "Press Generate button\nEnable Wi-Fi for high entropy.\nNo need to connect.");
+    lv_label_set_text(resultLabel, "Press Generate button\nWi-Fi improves randomness.\nSee info button.");
     lv_label_set_long_mode(resultLabel, LV_LABEL_LONG_MODE_WRAP);
     lv_obj_set_size(resultLabel, LV_PCT(100), LV_SIZE_CONTENT);
     lv_obj_set_align(resultLabel, LV_ALIGN_CENTER);
