@@ -1,28 +1,28 @@
 #include "Application.h"
 
-#include "esp_log.h"
-
 #include <tt_file.h>
 #include <tt_lock.h>
 #include <tt_lvgl.h>
 #include <tt_lvgl_toolbar.h>
 
-#include <ctime>
-#include <vector>
-#include <bits/stdc++.h>
+#include <esp_random.h>
+#include <esp_log.h>
 
 constexpr char* TAG = "Diceware";
 
 static void skipNewlines(FILE* file, const int count) {
     char c;
     int count_in_file = 0;
-    while (count_in_file < count && fread(&c, 1, 1, file)) { if (c == '\n') { count_in_file++; } }
+    while (count_in_file < count && fread(&c, 1, 1, file)) {
+        if (c == '\n') {
+            count_in_file++;
+        }
+    }
 }
 
 static Str readWord(FILE* file) {
     char c;
     Str result;
-    fseek(file, 5, SEEK_CUR); // Skip dice values
     // Read word until newline
     while (fread(&c, 1, 1, file) && c != '\n') { result.append(c); }
     return result;
@@ -54,14 +54,10 @@ static Str readWordAtLine(const AppHandle handle, const int lineIndex) {
 
 int32_t Application::jobMain(void* data) {
     Application* application = static_cast<Application*>(data);
-    timespec time_now;
-    clock_gettime(CLOCK_REALTIME, &time_now);
-    // TODO: Make it more random with iterations and other data (mac/build version/etc. or perhaps touch on the screen)
-    srand(time_now.tv_nsec);
     Str result;
     for (int i = 0; i < application->wordCount; i++) {
         constexpr int line_count = 7776;
-        const auto line_index = rand() % line_count;
+        const auto line_index = esp_random() % line_count;
         auto word = readWordAtLine(application->handle, line_index);
         result.appendf("%s ", word.c_str());
     }
@@ -167,7 +163,8 @@ void Application::onShow(AppHandle appHandle, lv_obj_t* parent) {
     lv_obj_set_style_pad_all(result_wrapper, 0, LV_STATE_DEFAULT);
 
     resultLabel = lv_label_create(result_wrapper);
-    lv_label_set_text(resultLabel, "Press Generate button");
+    // See https://docs.espressif.com/projects/esp-idf/en/latest/esp32/api-reference/system/random.html
+    lv_label_set_text(resultLabel, "Press Generate button\nEnable Wi-Fi for high entropy.\nNo need to connect.");
     lv_label_set_long_mode(resultLabel, LV_LABEL_LONG_MODE_WRAP);
     lv_obj_set_size(resultLabel, LV_PCT(100), LV_SIZE_CONTENT);
     lv_obj_set_align(resultLabel, LV_ALIGN_CENTER);
