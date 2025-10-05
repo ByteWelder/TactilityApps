@@ -88,15 +88,13 @@ static void onDestroy(AppHandle appHandle, void* data) {
     }
 }
 
-ExternalAppManifest manifest = {
-    .onCreate = onCreate,
-    .onDestroy = onDestroy
-};
-
 extern "C" {
 
 int main(int argc, char* argv[]) {
-    tt_app_register(&manifest);
+    tt_app_register((AppRegistration) {
+        .onCreate = onCreate,
+        .onDestroy = onDestroy
+    });
     return 0;
 }
 

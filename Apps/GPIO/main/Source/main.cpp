@@ -17,27 +17,25 @@ static void onHideApp(AppHandle appHandle, void* data) {
     static_cast<Application*>(data)->onHide(appHandle);
 }
 
-static void* createApp() {
+static void* createAppData() {
     return new Application();
 }
 
-static void destroyApp(void* app) {
+static void destroyAppData(void* app) {
     delete static_cast<Application*>(app);
 }
-
-ExternalAppManifest manifest = {
-    .createData = createApp,
-    .destroyData = destroyApp,
-    .onCreate = onCreateApp,
-    .onDestroy = onDestroyApp,
-    .onShow = onShowApp,
-    .onHide = onHideApp,
-};
 
 extern "C" {
 
 int main(int argc, char* argv[]) {
-    tt_app_register(&manifest);
+    tt_app_register((AppRegistration) {
+        .createData = createAppData,
+        .destroyData = destroyAppData,
+        .onCreate = onCreateApp,
+        .onDestroy = onDestroyApp,
+        .onShow = onShowApp,
+        .onHide = onHideApp,
+    });
     return 0;
 }
 

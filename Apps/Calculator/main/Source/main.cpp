@@ -1,28 +1,26 @@
 #include <tt_app.h>
 #include "Calculator.h"
 
-static void onShow(AppHandle appHandle, void* data, lv_obj_t* parent) {
+static void onShowApp(AppHandle appHandle, void* data, lv_obj_t* parent) {
     static_cast<Calculator*>(data)->onShow(appHandle, parent);
 }
 
-static void* createApp() {
+static void* createAppData() {
     return new Calculator();
 }
 
-static void destroyApp(void* app) {
+static void destroyAppData(void* app) {
     delete static_cast<Calculator*>(app);
 }
-
-ExternalAppManifest manifest = {
-    .createData = createApp,
-    .destroyData = destroyApp,
-    .onShow = onShow,
-};
 
 extern "C" {
 
 int main(int argc, char* argv[]) {
-    tt_app_register(&manifest);
+    tt_app_register((AppRegistration) {
+        .createData = createAppData,
+        .destroyData = destroyAppData,
+        .onShow = onShowApp,
+    });
     return 0;
 }
 
