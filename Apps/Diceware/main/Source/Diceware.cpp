@@ -1,4 +1,4 @@
-#include "Application.h"
+#include "Diceware.h"
 
 #include <tt_app_alertdialog.h>
 #include <tt_file.h>
@@ -53,8 +53,8 @@ static Str readWordAtLine(const AppHandle handle, const int lineIndex) {
     return word;
 }
 
-int32_t Application::jobMain(void* data) {
-    Application* application = static_cast<Application*>(data);
+int32_t Diceware::jobMain(void* data) {
+    Diceware* application = static_cast<Diceware*>(data);
     Str result;
     for (int i = 0; i < application->wordCount; i++) {
         constexpr int line_count = 7776;
@@ -68,7 +68,7 @@ int32_t Application::jobMain(void* data) {
     return 0;
 }
 
-void Application::cleanupJob() {
+void Diceware::cleanupJob() {
     if (jobThread != nullptr) {
         tt_thread_join(jobThread, TT_MAX_TICKS);
         tt_thread_free(jobThread);
@@ -76,7 +76,7 @@ void Application::cleanupJob() {
     }
 }
 
-void Application::startJob(uint32_t jobWordCount) {
+void Diceware::startJob(uint32_t jobWordCount) {
     cleanupJob();
 
     wordCount = jobWordCount;
@@ -84,14 +84,14 @@ void Application::startJob(uint32_t jobWordCount) {
     tt_thread_start(jobThread);
 }
 
-void Application::onFinishJob(Str result) {
+void Diceware::onFinishJob(Str result) {
     tt_lvgl_lock();
     lv_label_set_text(resultLabel, result.c_str());
     tt_lvgl_unlock();
 }
 
-void Application::onClickGenerate(lv_event_t* e) {
-    auto* application = static_cast<Application*>(lv_event_get_user_data(e));
+void Diceware::onClickGenerate(lv_event_t* e) {
+    auto* application = static_cast<Diceware*>(lv_event_get_user_data(e));
     auto* spinbox = application->spinbox;
 
     lv_label_set_text(application->resultLabel, "Generating...");
@@ -100,22 +100,22 @@ void Application::onClickGenerate(lv_event_t* e) {
     application->startJob(word_count);
 }
 
-void Application::onSpinboxDecrement(lv_event_t* e) {
+void Diceware::onSpinboxDecrement(lv_event_t* e) {
     auto* spinbox = static_cast<lv_obj_t*>(lv_event_get_user_data(e));
     lv_spinbox_decrement(spinbox);
 }
 
-void Application::onSpinboxIncrement(lv_event_t* e) {
+void Diceware::onSpinboxIncrement(lv_event_t* e) {
     auto* spinbox = static_cast<lv_obj_t*>(lv_event_get_user_data(e));
     lv_spinbox_increment(spinbox);
 }
 
-void Application::onHelpClicked(lv_event_t* e) {
+void Diceware::onHelpClicked(lv_event_t* e) {
     const char* buttons[] = { "OK" };
     tt_app_alertdialog_start("Diceware Info", "The hardware random number generator can use the Wi-Fi radio to improve randomness. There's no need to connect to a Wi-Fi network for this to work.", buttons, 1);
 }
 
-void Application::onShow(AppHandle appHandle, lv_obj_t* parent) {
+void Diceware::onShow(AppHandle appHandle, lv_obj_t* parent) {
     handle = appHandle;
 
     lv_obj_set_flex_flow(parent, LV_FLEX_FLOW_COLUMN);
@@ -179,6 +179,6 @@ void Application::onShow(AppHandle appHandle, lv_obj_t* parent) {
     lv_obj_set_style_text_align(resultLabel, LV_TEXT_ALIGN_CENTER, LV_STATE_DEFAULT);
 }
 
-void Application::onHide(AppHandle context) {
+void Diceware::onHide(AppHandle context) {
     cleanupJob();
 }

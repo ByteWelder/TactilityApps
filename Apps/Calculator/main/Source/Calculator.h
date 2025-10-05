@@ -5,8 +5,9 @@
 #include <lvgl.h>
 #include <deque>
 #include <Str.h>
+#include <TactilityCpp/App.h>
 
-class Calculator {
+class Calculator final : public App {
 
     lv_obj_t* displayLabel;
     lv_obj_t* resultLabel;
@@ -23,5 +24,5 @@ class Calculator {
 
 public:
 
-    void onShow(AppHandle context, lv_obj_t* parent);
+    void onShow(AppHandle context, lv_obj_t* parent) override;
 };

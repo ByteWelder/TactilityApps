@@ -1,4 +1,4 @@
-#include "Application.h"
+#include "Gpio.h"
 
 #include <tt_app_alertdialog.h>
 #include <tt_hal.h>
@@ -10,7 +10,7 @@
 
 constexpr char* TAG = "GPIO";
 
-void Application::updatePinStates() {
+void Gpio::updatePinStates() {
     tt_mutex_lock(mutex, TT_MAX_TICKS);
     // Update pin states
     for (int i = 0; i < pinStates.size(); ++i) {
@@ -19,7 +19,7 @@ void Application::updatePinStates() {
     tt_mutex_unlock(mutex);
 }
 
-void Application::updatePinWidgets() {
+void Gpio::updatePinWidgets() {
     tt_lvgl_lock();
     assert(pinStates.size() == pinWidgets.size());
     for (int j = 0; j < pinStates.size(); ++j) {
@@ -39,7 +39,7 @@ void Application::updatePinWidgets() {
     tt_lvgl_unlock();
 }
 
-lv_obj_t* Application::createGpioRowWrapper(lv_obj_t* parent) {
+lv_obj_t* Gpio::createGpioRowWrapper(lv_obj_t* parent) {
     lv_obj_t* wrapper = lv_obj_create(parent);
     lv_obj_set_style_pad_all(wrapper, 0, LV_STATE_DEFAULT);
     lv_obj_set_style_border_width(wrapper, 0, LV_STATE_DEFAULT);
@@ -49,13 +49,13 @@ lv_obj_t* Application::createGpioRowWrapper(lv_obj_t* parent) {
 
 // region Task
 
-void Application::onTimer(void* context) {
-    Application* app = static_cast<Application*>(context);
+void Gpio::onTimer(void* context) {
+    Gpio* app = static_cast<Gpio*>(context);
     app->updatePinStates();
     app->updatePinWidgets();
 }
 
-void Application::startTask() {
+void Gpio::startTask() {
     tt_mutex_lock(mutex, TT_MAX_TICKS);
     assert(timer == nullptr);
     timer = tt_timer_alloc(TimerTypePeriodic, onTimer, this);
@@ -63,7 +63,7 @@ void Application::startTask() {
     tt_mutex_unlock(mutex);
 }
 
-void Application::stopTask() {
+void Gpio::stopTask() {
     assert(timer);
 
     tt_timer_stop(timer);
@@ -81,15 +81,15 @@ static int getSquareSpacing(UiScale scale) {
     }
 }
 
-void Application::onCreate(AppHandle app) {
+void Gpio::onCreate(AppHandle app) {
     mutex = tt_mutex_alloc(MUTEX_TYPE_RECURSIVE);
 }
 
-void Application::onDestroy(AppHandle app) {
+void Gpio::onDestroy(AppHandle app) {
     tt_mutex_free(mutex);
 }
 
-void Application::onShow(AppHandle app, lv_obj_t* parent) {
+void Gpio::onShow(AppHandle app, lv_obj_t* parent) {
     // auto ui_scale = hal::getConfiguration()->uiScale;
 
     lv_obj_set_flex_flow(parent, LV_FLEX_FLOW_COLUMN);
@@ -171,7 +171,7 @@ void Application::onShow(AppHandle app, lv_obj_t* parent) {
     startTask();
 }
 
-void Application::onHide(AppHandle app) {
+void Gpio::onHide(AppHandle app) {
     stopTask();
 
     tt_mutex_lock(mutex, TT_MAX_TICKS);

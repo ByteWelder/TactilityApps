@@ -5,8 +5,9 @@
 
 #include <Str.h>
 #include <lvgl.h>
+#include <TactilityCpp/App.h>
 
-class Application final {
+class Diceware final : public App {
 
     AppHandle handle = nullptr;
     lv_obj_t* spinbox = nullptr;
@@ -27,6 +28,6 @@ class Application final {
 
 public:
 
-    void onShow(AppHandle context, lv_obj_t* parent);
-    void onHide(AppHandle context);
+    void onShow(AppHandle context, lv_obj_t* parent) override;
+    void onHide(AppHandle context) override;
 };

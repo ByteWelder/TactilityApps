@@ -1,13 +1,15 @@
 #pragma once
 
-#include "tt_app.h"
-#include "tt_mutex.h"
-#include "tt_timer.h"
+#include <TactilityCpp/App.h>
+
+#include <tt_app.h>
+#include <tt_mutex.h>
+#include <tt_timer.h>
 
 #include <lvgl.h>
 #include <vector>
 
-class Application final {
+class Gpio final : public App {
 
     std::vector<lv_obj_t*> pinWidgets;
     std::vector<bool> pinStates;
@@ -19,10 +21,10 @@ class Application final {
 
 public:
 
-    void onCreate(AppHandle app);
-    void onDestroy(AppHandle app);
-    void onShow(AppHandle context, lv_obj_t* parent);
-    void onHide(AppHandle context);
+    void onCreate(AppHandle app) override;
+    void onDestroy(AppHandle app) override;
+    void onShow(AppHandle context, lv_obj_t* parent) override;
+    void onHide(AppHandle context) override;
 
     void startTask();
     void stopTask();
