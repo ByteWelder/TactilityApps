@@ -72,6 +72,7 @@ void Application::cleanupJob() {
     if (jobThread != nullptr) {
         tt_thread_join(jobThread, TT_MAX_TICKS);
         tt_thread_free(jobThread);
+        jobThread = nullptr;
     }
 }
 
@@ -178,4 +179,6 @@ void Application::onShow(AppHandle appHandle, lv_obj_t* parent) {
     lv_obj_set_style_text_align(resultLabel, LV_TEXT_ALIGN_CENTER, LV_STATE_DEFAULT);
 }
 
-void Application::onHide(AppHandle context) { cleanupJob(); }
+void Application::onHide(AppHandle context) {
+    cleanupJob();
+}
