@@ -1,6 +1,7 @@
 #include "Application.h"
 
 #include <tt_app_alertdialog.h>
+#include <tt_hal.h>
 #include <tt_hal_gpio.h>
 #include <tt_lvgl.h>
 #include <tt_lvgl_toolbar.h>
@@ -72,13 +73,12 @@ void Application::stopTask() {
 
 // endregion Task
 
-static int getSquareSpacing(/*hal::UiScale uiScale*/) {
-    // if (uiScale == hal::UiScale::Smallest) {
-    //     return 0;
-    // } else {
-    //     return 4;
-    // }
-    return 4;
+static int getSquareSpacing(UiScale scale) {
+    if (scale == UiScaleSmallest) {
+        return 0;
+    } else {
+        return 4;
+    }
 }
 
 void Application::onCreate(AppHandle app) {
@@ -117,7 +117,8 @@ void Application::onShow(AppHandle app, lv_obj_t* parent) {
     bool is_landscape_display = horizontal_px > vertical_px;
 
     constexpr auto block_width = 16;
-    const auto square_spacing = getSquareSpacing(/*ui_scale*/);
+    auto ui_scale = tt_hal_configuration_get_ui_scale();
+    const auto square_spacing = getSquareSpacing(ui_scale);
     int32_t x_spacing = block_width + square_spacing;
     uint8_t column = 0;
     const uint8_t column_limit = is_landscape_display ? 10 : 5;
