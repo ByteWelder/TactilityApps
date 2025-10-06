@@ -14,28 +14,13 @@ import shutil
 import configparser
 
 ttbuild_path = ".tactility"
-ttbuild_version = "2.3.4"
+ttbuild_version = "2.4.0"
 ttbuild_cdn = "https://cdn.tactility.one"
 ttbuild_sdk_json_validity = 3600  # seconds
 ttport = 6666
 verbose = False
 use_local_sdk = False
 local_base_path = None
-valid_platforms = ["esp32", "esp32s3"]
-no_animations = False
-
-spinner_pattern = [
-    "⠋",
-    "⠙",
-    "⠹",
-    "⠸",
-    "⠼",
-    "⠴",
-    "⠦",
-    "⠧",
-    "⠇",
-    "⠏"
-]
 
 if sys.platform == "win32":
     shell_color_red = ""
@@ -73,7 +58,6 @@ def print_help():
     print("  --local-sdk                    Use SDK specified by environment variable TACTILITY_SDK_PATH with platform subfolders matching target platforms.")
     print("  --skip-build                   Run everything except the idf.py/CMake commands")
     print("  --verbose                      Show extra console output")
-    print("  --no-animations                Disable animations during building (e.g. for CI jobs)")
 
 # region Core
 
@@ -104,6 +88,17 @@ def print_warning(message):
 
 def print_error(message):
     print(f"{shell_color_red}ERROR: {message}{shell_color_reset}")
+
+def print_status_busy(status):
+    sys.stdout.write(f"⌛ {status}\r")
+
+def print_status_success(status):
+    # Trailing spaces are to overwrite previously written characters by a potentially shorter print_status_busy() text
+    print(f"✅ {shell_color_green}{status}{shell_color_reset}          ")
+
+def print_status_error(status):
+    # Trailing spaces are to overwrite previously written characters by a potentially shorter print_status_busy() text
+    print(f"❌ {shell_color_red}{status}{shell_color_reset}          ")
 
 def exit_with_error(message):
     print_error(message)
@@ -339,25 +334,17 @@ def build_all(version, platforms, skip_build):
                 return False
     return True
 
-def wait_for_build(process, platform):
-    global no_animations
+def wait_for_process(process):
     buffer = []
     os.set_blocking(process.stdout.fileno(), False)
-    if no_animations:
-        print(f"Building for {platform}")
     while process.poll() is None:
-        for i in spinner_pattern:
-            time.sleep(0.1)
-            if not no_animations:
-                progress_text = f"Building for {platform} {shell_color_cyan}" + str(i) + shell_color_reset
-                sys.stdout.write(progress_text + "\r")
-            while True:
-                line = process.stdout.readline()
-                decoded_line = line.decode("UTF-8")
-                if decoded_line != "":
-                    buffer.append(decoded_line)
-                else:
-                    break
+        while True:
+            line = process.stdout.readline()
+            decoded_line = line.decode("UTF-8")
+            if decoded_line != "":
+                buffer.append(decoded_line)
+            else:
+                break
     return buffer
 
 # The first build must call "idf.py build" and consecutive builds must call "idf.py elf" as it finishes faster.
@@ -377,10 +364,11 @@ def build_first(version, platform, skip_build):
         os.remove(elf_path)
     if skip_build:
         return True
-    print("Building first build")
+    print(f"Building first {platform} build")
     cmake_path = get_cmake_path(platform)
+    print_status_busy(f"Building {platform} ELF")
     with subprocess.Popen(["idf.py", "-B", cmake_path, "build"], stdout=subprocess.PIPE, stderr=subprocess.STDOUT) as process:
-        build_output = wait_for_build(process, platform)
+        build_output = wait_for_process(process)
         # The return code is never expected to be 0 due to a bug in the elf cmake script, but we keep it just in case
         if process.returncode == 0:
             print(f"{shell_color_green}Building for {platform} ✅{shell_color_reset}")
@@ -389,10 +377,10 @@ def build_first(version, platform, skip_build):
             if find_elf_file(platform) is None:
                 for line in build_output:
                     print(line, end="")
-                print(f"{shell_color_red}Building for {platform} failed ❌{shell_color_reset}")
+                print_status_error(f"Building {platform} ELF")
                 return False
             else:
-                print(f"{shell_color_green}Building for {platform} ✅{shell_color_reset}")
+                print_status_success(f"Building {platform} ELF")
                 return True
 
 def build_consecutively(version, platform, skip_build):
@@ -405,15 +393,16 @@ def build_consecutively(version, platform, skip_build):
     if skip_build:
         return True
     cmake_path = get_cmake_path(platform)
+    print_status_busy(f"Building {platform} ELF")
     with subprocess.Popen(["idf.py", "-B", cmake_path, "elf"], stdout=subprocess.PIPE, stderr=subprocess.STDOUT) as process:
-        build_output = wait_for_build(process, platform)
+        build_output = wait_for_process(process)
         if process.returncode == 0:
-            print(f"{shell_color_green}Building for {platform} ✅{shell_color_reset}")
+            print_status_success(f"Building {platform} ELF")
             return True
         else:
             for line in build_output:
                 print(line, end="")
-            print(f"{shell_color_red}Building for {platform} failed ❌{shell_color_reset}")
+            print_status_error(f"Building {platform} ELF")
             return False
 
 #endregion Building
@@ -454,14 +443,22 @@ def package_name(platforms):
     elf_base_name = os.path.basename(elf_path).removesuffix(".app.elf")
     return os.path.join("build", f"{elf_base_name}.app")
 
+
 def package_all(platforms):
-    print("Packaging app")
+    status = f"Building package with {platforms}"
+    print_status_busy(status)
     package_intermediate(platforms)
     # Create build/something.app
-    tar_path = package_name(platforms)
-    tar = tarfile.open(tar_path, mode="w", format=tarfile.USTAR_FORMAT)
-    tar.add(os.path.join("build", "package-intermediate"), arcname="")
-    tar.close()
+    try:
+        tar_path = package_name(platforms)
+        tar = tarfile.open(tar_path, mode="w", format=tarfile.USTAR_FORMAT)
+        tar.add(os.path.join("build", "package-intermediate"), arcname="")
+        tar.close()
+        print_status_success(status)
+        return True
+    except Exception as e:
+        print_status_error(f"Building package failed: {e.message}")
+        return False
 
 #endregion Packaging
 
@@ -493,21 +490,25 @@ def build_action(manifest, platform_arg):
         validate_version_and_platforms(sdk_json, sdk_version, platforms_to_build)
         if not sdk_download_all(sdk_version, platforms_to_build):
             exit_with_error("Failed to download one or more SDKs")
-    if build_all(sdk_version, platforms_to_build, skip_build):  # Environment validation
-        if not skip_build:
-            package_all(platforms_to_build)
+    if not build_all(sdk_version, platforms_to_build, skip_build):  # Environment validation
+        return False
+    if not skip_build:
+        package_all(platforms_to_build)
+    return True
 
 def clean_action():
     if os.path.exists("build"):
-        print(f"Removing build/")
+        print_status_busy("Removing build/")
         shutil.rmtree("build")
+        print_status_success("Removed build/")
     else:
         print("Nothing to clean")
 
 def clear_cache_action():
     if os.path.exists(ttbuild_path):
-        print(f"Removing {ttbuild_path}/")
+        print_status_busy(f"Removing {ttbuild_path}/")
         shutil.rmtree(ttbuild_path)
+        print_status_success(f"Removed {ttbuild_path}/")
     else:
         print("Nothing to clear")
 
@@ -520,21 +521,21 @@ def update_self_action():
         exit_with_error("Update failed")
 
 def get_device_info(ip):
-    print(f"Getting device info from {ip}")
+    print_status_busy(f"Requesting device info")
     url = get_url(ip, "/info")
     try:
         response = requests.get(url)
         if response.status_code != 200:
             print_error("Run failed")
         else:
+            print_status_success(f"Received device info:")
             print(response.json())
-            print(f"{shell_color_green}Run successful ✅{shell_color_reset}")
     except requests.RequestException as e:
-        print(f"Request failed: {e}")
+        print_status_error(f"Device info request failed: {e.message}")
 
 def run_action(manifest, ip):
     app_id = manifest["app"]["id"]
-    print(f"Running {app_id} on {ip}")
+    print_status_busy("Running")
     url = get_url(ip, "/app/run")
     params = {'id': app_id}
     try:
@@ -542,17 +543,19 @@ def run_action(manifest, ip):
         if response.status_code != 200:
             print_error("Run failed")
         else:
-            print(f"{shell_color_green}Run successful ✅{shell_color_reset}")
+            print_status_success("Running")
     except requests.RequestException as e:
-        print(f"Request failed: {e}")
+        print_status_error(f"Running request failed: {e.message}")
 
 def install_action(ip, platforms):
+    print_status_busy("Installing")
     for platform in platforms:
         elf_path = find_elf_file(platform)
         if elf_path is None:
-            exit_with_error(f"ELF file not built for {platform}")
+            print_status_error(f"ELF file not built for {platform}")
+            return False
     package_path = package_name(platforms)
-    print(f"Installing {package_path} to {ip}")
+    # print(f"Installing {package_path} to {ip}")
     url = get_url(ip, "/app/install")
     try:
         # Prepare multipart form data
@@ -562,27 +565,32 @@ def install_action(ip, platforms):
             }
             response = requests.put(url, files=files)
             if response.status_code != 200:
-                print_error("Install failed")
+                print_status_error("Install failed")
+                return True
             else:
-                print(f"{shell_color_green}Installation successful ✅{shell_color_reset}")
+                print_status_success("Installing")
+                return True
     except requests.RequestException as e:
-        print_error(f"Installation failed: {e}")
+        print_status_error(f"Install request failed: {e.message}")
+        return False
     except IOError as e:
-        print_error(f"File error: {e}")
+        print_status_error(f"Install file error: {e.message}")
+        return False
 
 def uninstall_action(manifest, ip):
     app_id = manifest["app"]["id"]
-    print(f"Uninstalling {app_id} on {ip}")
+    print_status_busy("Uninstalling")
     url = get_url(ip, "/app/uninstall")
     params = {'id': app_id}
     try:
         response = requests.put(url, params=params)
         if response.status_code != 200:
-            print_error("Uninstall failed")
+            print_status_error("Server responded that uninstall failed")
         else:
-            print(f"{shell_color_green}Uninstall successful ✅{shell_color_reset}")
+            print_status_success("Uninstalled")
     except requests.RequestException as e:
-        print(f"Request failed: {e}")
+        print_status_success(f"Uninstall request failed: {e.message}")
+
 #region Main
 
 if __name__ == "__main__":
@@ -604,9 +612,6 @@ if __name__ == "__main__":
     if "--local-sdk" in sys.argv:
         use_local_sdk = True
         sys.argv.remove("--local-sdk")
-    if "--no-animations" in sys.argv:
-        no_animations = True
-        sys.argv.remove("--no-animations")
     action_arg = sys.argv[1]
 
     # Environment setup
@@ -663,9 +668,9 @@ if __name__ == "__main__":
         if len(sys.argv) >= 4:
             platform = sys.argv[3]
             platforms_to_install = [platform]
-        build_action(manifest, platform)
-        install_action(sys.argv[2], platforms_to_install)
-        run_action(manifest, sys.argv[2])
+        if build_action(manifest, platform):
+            if install_action(sys.argv[2], platforms_to_install):
+                run_action(manifest, sys.argv[2])
     else:
         print_help()
         exit_with_error("Unknown commandline parameter")
