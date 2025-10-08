@@ -49,3 +49,11 @@ jobs:
         uses: ./.github/actions/build-app
         with:
           app_name: HelloWorld
+  SerialConsole:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: "Build"
+        uses: ./.github/actions/build-app
+        with:
+          app_name: SerialConsole

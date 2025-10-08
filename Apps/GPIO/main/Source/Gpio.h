@@ -3,8 +3,9 @@
 #include <TactilityCpp/App.h>
 
 #include <tt_app.h>
-#include <tt_mutex.h>
 #include <tt_timer.h>
+
+#include <TactilityCpp/Mutex.h>
 
 #include <lvgl.h>
 #include <vector>
@@ -14,15 +15,13 @@ class Gpio final : public App {
     std::vector<lv_obj_t*> pinWidgets;
     std::vector<bool> pinStates;
     TimerHandle timer;
-    MutexHandle mutex;
+    Mutex mutex = Mutex(MutexTypeRecursive);
 
     static lv_obj_t* createGpioRowWrapper(lv_obj_t* parent);
     static void onTimer(void* parameter);
 
 public:
 
-    void onCreate(AppHandle app) override;
-    void onDestroy(AppHandle app) override;
     void onShow(AppHandle context, lv_obj_t* parent) override;
     void onHide(AppHandle context) override;
 

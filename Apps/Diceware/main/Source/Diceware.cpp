@@ -1,7 +1,6 @@
 #include "Diceware.h"
 
 #include <tt_app_alertdialog.h>
-#include <tt_file.h>
 #include <tt_lock.h>
 #include <tt_lvgl.h>
 #include <tt_lvgl_toolbar.h>
@@ -38,7 +37,7 @@ static Str readWordAtLine(const AppHandle handle, const int lineIndex) {
         return "";
     }
 
-    auto lock = tt_lock_alloc_for_file(path);
+    auto lock = tt_lock_alloc_for_path(path);
     Str word;
     if (tt_lock_acquire(lock, TT_MAX_TICKS)) {
         FILE* file = fopen(path, "r");
@@ -85,7 +84,7 @@ void Diceware::startJob(uint32_t jobWordCount) {
 }
 
 void Diceware::onFinishJob(Str result) {
-    tt_lvgl_lock();
+    tt_lvgl_lock(TT_MAX_TICKS);
     lv_label_set_text(resultLabel, result.c_str());
     tt_lvgl_unlock();
 }

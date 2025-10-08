@@ -11,16 +11,16 @@
 constexpr char* TAG = "GPIO";
 
 void Gpio::updatePinStates() {
-    tt_mutex_lock(mutex, TT_MAX_TICKS);
+    mutex.lock();
     // Update pin states
     for (int i = 0; i < pinStates.size(); ++i) {
         pinStates[i] = tt_hal_gpio_get_level(i);
     }
-    tt_mutex_unlock(mutex);
+    mutex.unlock();
 }
 
 void Gpio::updatePinWidgets() {
-    tt_lvgl_lock();
+    tt_lvgl_lock(TT_MAX_TICKS);
     assert(pinStates.size() == pinWidgets.size());
     for (int j = 0; j < pinStates.size(); ++j) {
         int level = pinStates[j];
@@ -56,11 +56,11 @@ void Gpio::onTimer(void* context) {
 }
 
 void Gpio::startTask() {
-    tt_mutex_lock(mutex, TT_MAX_TICKS);
+    mutex.lock();
     assert(timer == nullptr);
     timer = tt_timer_alloc(TimerTypePeriodic, onTimer, this);
     tt_timer_start(timer, 100 / portTICK_PERIOD_MS);
-    tt_mutex_unlock(mutex);
+    mutex.unlock();
 }
 
 void Gpio::stopTask() {
@@ -79,14 +79,6 @@ static int getSquareSpacing(UiScale scale) {
     } else {
         return 4;
     }
-}
-
-void Gpio::onCreate(AppHandle app) {
-    mutex = tt_mutex_alloc(MUTEX_TYPE_RECURSIVE);
-}
-
-void Gpio::onDestroy(AppHandle app) {
-    tt_mutex_free(mutex);
 }
 
 void Gpio::onShow(AppHandle app, lv_obj_t* parent) {
@@ -126,7 +118,7 @@ void Gpio::onShow(AppHandle app, lv_obj_t* parent) {
     auto* row_wrapper = createGpioRowWrapper(centering_wrapper);
     lv_obj_align(row_wrapper, LV_ALIGN_TOP_MID, 0, 0);
 
-    tt_mutex_lock(mutex, TT_MAX_TICKS);
+    mutex.lock();
 
     auto pin_count = tt_hal_gpio_get_pin_count();
     pinStates.resize(pin_count);
@@ -166,7 +158,7 @@ void Gpio::onShow(AppHandle app, lv_obj_t* parent) {
         }
     }
 
-    tt_mutex_unlock(mutex);
+    mutex.unlock();
 
     startTask();
 }
@@ -174,8 +166,8 @@ void Gpio::onShow(AppHandle app, lv_obj_t* parent) {
 void Gpio::onHide(AppHandle app) {
     stopTask();
 
-    tt_mutex_lock(mutex, TT_MAX_TICKS);
+    mutex.lock();
     pinWidgets.clear();
     pinStates.clear();
-    tt_mutex_unlock(mutex);
+    mutex.unlock();
 }

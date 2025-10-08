@@ -1,7 +1,7 @@
 #pragma once
 
-#include <concepts>
 #include <tt_app.h>
+#include <type_traits>
 
 class App {
 public:
