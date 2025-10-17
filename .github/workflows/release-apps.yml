@@ -2,7 +2,6 @@ name: Release Apps
 on:
   workflow_run:
     workflows: ["Build Apps"]
-    branches: [main]
     types: 
       - completed
 

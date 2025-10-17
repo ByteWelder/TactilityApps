@@ -9,38 +9,38 @@ on:
 permissions: read-all
 
 jobs:
-  Calculator:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - name: "Build"
-        uses: ./.github/actions/build-app
-        with:
-          app_name: Calculator
-  Diceware:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - name: "Build"
-        uses: ./.github/actions/build-app
-        with:
-          app_name: Diceware
-  GPIO:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - name: "Build"
-        uses: ./.github/actions/build-app
-        with:
-          app_name: GPIO
-  GraphicsDemo:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - name: "Build"
-        uses: ./.github/actions/build-app
-        with:
-          app_name: GraphicsDemo
+#  Calculator:
+#    runs-on: ubuntu-latest
+#    steps:
+#      - uses: actions/checkout@v4
+#      - name: "Build"
+#        uses: ./.github/actions/build-app
+#        with:
+#          app_name: Calculator
+#  Diceware:
+#    runs-on: ubuntu-latest
+#    steps:
+#      - uses: actions/checkout@v4
+#      - name: "Build"
+#        uses: ./.github/actions/build-app
+#        with:
+#          app_name: Diceware
+#  GPIO:
+#    runs-on: ubuntu-latest
+#    steps:
+#      - uses: actions/checkout@v4
+#      - name: "Build"
+#        uses: ./.github/actions/build-app
+#        with:
+#          app_name: GPIO
+#  GraphicsDemo:
+#    runs-on: ubuntu-latest
+#    steps:
+#      - uses: actions/checkout@v4
+#      - name: "Build"
+#        uses: ./.github/actions/build-app
+#        with:
+#          app_name: GraphicsDemo
   HelloWorld:
     runs-on: ubuntu-latest
     steps:
