@@ -8,7 +8,7 @@ runs:
       with:
         path: downloaded_apps
     - name: Place reports' artifacts
-      run: rsync -av downloaded_apps/*/*/ release_apps/
+      run: rsync -av downloaded_apps/* release_apps/
       shell: bash
     - name: 'Upload Artifact'
       uses: actions/upload-artifact@v4
