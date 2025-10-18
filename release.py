@@ -142,13 +142,6 @@ def get_os_version(manifest):
     else:
         return sdk
 
-def get_json_filename(manifest):
-    if manifest is not None:
-        os_version = get_os_version(manifest)
-        return f"apps-{os_version}.json"
-    else:
-        return "apps.json"
-
 if __name__ == "__main__":
     print("Tactility app release script")
     if len(sys.argv) != 2:
@@ -177,6 +170,5 @@ if __name__ == "__main__":
         print(f"Renamed {file_path} to {renamed_file_path}")
         any_manifest = manifest
     # Write JSON
-    json_filename = get_json_filename(any_manifest)
-    output_json_path = os.path.join(app_directory, json_filename)
+    output_json_path = os.path.join(app_directory, "apps.json")
     write_json(output_json_path, output_json)
