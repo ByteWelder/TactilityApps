@@ -1,18 +1,21 @@
 name: Release Apps
 
 runs:
-  using: "composite"
+  using: 'composite'
   steps:
-    - name: Download app artifacts
+    - name: 'Download app artifacts'
       uses: actions/download-artifact@v4
       with:
         path: downloaded_apps
-    - name: Place reports' artifacts
-      run: rsync -av downloaded_apps/*/*.app release_apps/
+    - name: Copy apps to cdn_files/
+      run: rsync -av downloaded_apps/*/*.app cdn_files/
+      shell: bash
+    - name: 'Create CDN release files'
+      run: python release.py cdn_files/
       shell: bash
     - name: 'Upload Artifact'
       uses: actions/upload-artifact@v4
       with:
-        name: "apps"
-        path: release_apps/
+        name: 'cdn-files'
+        path: cdn_files/
         retention-days: 30
