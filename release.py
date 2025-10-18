@@ -122,9 +122,8 @@ def manifest_config_to_flat_json(manifest):
     author_name = "Tactility"
     author_website = "https://tactility.one"
 
-    os_version = get_os_version(manifest)
     filename = get_versioned_file_name(manifest)
-    download_url = f"https://cdn.tactility.one/apps/{os_version}/{filename}"
+    download_url = f"./{filename}"
     return {
         "appId": app_id,
         "appVersionName": app_version_name,
