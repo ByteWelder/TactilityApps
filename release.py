@@ -118,12 +118,7 @@ def manifest_config_to_flat_json(manifest):
     platforms_raw = get_opt("target", "platforms", "")
     target_platforms = [p.strip() for p in str(platforms_raw).split(",") if p.strip()] if platforms_raw is not None else []
 
-    # Static author defaults per spec
-    author_name = "Tactility"
-    author_website = "https://tactility.one"
-
     filename = get_versioned_file_name(manifest)
-    download_url = f"./{filename}"
     return {
         "appId": app_id,
         "appVersionName": app_version_name,
@@ -132,9 +127,7 @@ def manifest_config_to_flat_json(manifest):
         "appDescription": app_description,
         "targetSdk": target_sdk,
         "targetPlatforms": target_platforms,
-        "authorName": author_name,
-        "authorWebsite": author_website,
-        "downloadUrl": download_url
+        "file": filename
     }
 
 def write_json(filepath, data):
