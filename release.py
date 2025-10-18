@@ -66,6 +66,14 @@ def get_versioned_file_name(manifest):
     version_code = manifest["app"]["versionCode"]
     return f"{app_id}-{version_code}.app"
 
+def get_os_version(manifest):
+    sdk = manifest["target"]["sdk"]
+    # Remove trailing hyphen suffix if present
+    if "-" in sdk:
+        return sdk.rsplit("-", 1)[0].strip()
+    else:
+        return sdk
+
 def manifest_config_to_flat_json(manifest):
     """Convert a ConfigParser manifest into a flat JSON-like dict.
 
@@ -114,8 +122,9 @@ def manifest_config_to_flat_json(manifest):
     author_name = "Tactility"
     author_website = "https://tactility.one"
 
+    os_version = get_os_version(manifest)
     filename = get_versioned_file_name(manifest)
-    download_url = f"https://cdn.tactility.one/{filename}"
+    download_url = f"https://cdn.tactility.one/apps/{os_version}/{filename}"
     return {
         "appId": app_id,
         "appVersionName": app_version_name,
@@ -133,14 +142,6 @@ def write_json(filepath, data):
     text = json.dumps(data)
     with open(filepath, 'w') as f:
         f.write(text)
-
-def get_os_version(manifest):
-    sdk = manifest["target"]["sdk"]
-    # Remove trailing hyphen suffix if present
-    if "-" in sdk:
-        return sdk.rsplit("-", 1)[0].strip()
-    else:
-        return sdk
 
 if __name__ == "__main__":
     print("Tactility app release script")
