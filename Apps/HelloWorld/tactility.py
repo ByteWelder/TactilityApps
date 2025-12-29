@@ -10,8 +10,6 @@ import urllib.request
 import zipfile
 import requests
 import tarfile
-import shutil
-import configparser
 
 ttbuild_path = ".tactility"
 ttbuild_version = "2.4.0"
@@ -23,12 +21,12 @@ use_local_sdk = False
 local_base_path = None
 
 if sys.platform == "win32":
-    shell_color_red = ""
-    shell_color_orange = ""
-    shell_color_green = ""
-    shell_color_purple = ""
-    shell_color_cyan = ""
-    shell_color_reset = ""
+    shell_color_red = "\033[91m"
+    shell_color_orange = "\033[93m"
+    shell_color_green = "\033[32m"
+    shell_color_purple = "\033[35m"
+    shell_color_cyan = "\033[36m"
+    shell_color_reset = "\033[m"
 else:
     shell_color_red = "\033[91m"
     shell_color_orange = "\033[93m"
@@ -196,7 +194,10 @@ def fetch_sdkconfig_files(platform_targets):
 
 def validate_environment():
     if os.environ.get("IDF_PATH") is None:
-        exit_with_error("Cannot find the Espressif IDF SDK. Ensure it is installed and that it is activated via $PATH_TO_IDF_SDK/export.sh")
+        if sys.platform == "win32":
+            exit_with_error("Cannot find the Espressif IDF SDK. Ensure it is installed and that it is activated via %IDF_PATH%\\export.ps1")
+        else:
+            exit_with_error("Cannot find the Espressif IDF SDK. Ensure it is installed and that it is activated via $PATH_TO_IDF_SDK/export.sh")
     if not os.path.exists("manifest.properties"):
         exit_with_error("manifest.properties not found")
     if use_local_sdk == False and os.environ.get("TACTILITY_SDK_PATH") is not None:
@@ -336,15 +337,24 @@ def build_all(version, platforms, skip_build):
 
 def wait_for_process(process):
     buffer = []
-    os.set_blocking(process.stdout.fileno(), False)
+    if sys.platform != "win32":
+        os.set_blocking(process.stdout.fileno(), False)
     while process.poll() is None:
         while True:
             line = process.stdout.readline()
-            decoded_line = line.decode("UTF-8")
-            if decoded_line != "":
-                buffer.append(decoded_line)
+            if line:
+                decoded_line = line.decode("UTF-8")
+                if decoded_line != "":
+                    buffer.append(decoded_line)
+                else:
+                    break
             else:
                 break
+    # Read any remaining output
+    for line in process.stdout:
+        decoded_line = line.decode("UTF-8")
+        if decoded_line:
+            buffer.append(decoded_line)
     return buffer
 
 # The first build must call "idf.py build" and consecutive builds must call "idf.py elf" as it finishes faster.
@@ -356,7 +366,7 @@ def build_first(version, platform, skip_build):
         print(f"Using SDK at {sdk_dir}")
     os.environ["TACTILITY_SDK_PATH"] = sdk_dir
     sdkconfig_path = os.path.join(ttbuild_path, f"sdkconfig.app.{platform}")
-    os.system(f"cp {sdkconfig_path} sdkconfig")
+    shutil.copy(sdkconfig_path, "sdkconfig")
     elf_path = find_elf_file(platform)
     # Remove previous elf file: re-creation of the file is used to measure if the build succeeded,
     # as the actual build job will always fail due to technical issues with the elf cmake script
@@ -367,7 +377,8 @@ def build_first(version, platform, skip_build):
     print(f"Building first {platform} build")
     cmake_path = get_cmake_path(platform)
     print_status_busy(f"Building {platform} ELF")
-    with subprocess.Popen(["idf.py", "-B", cmake_path, "build"], stdout=subprocess.PIPE, stderr=subprocess.STDOUT) as process:
+    shell_needed = sys.platform == "win32"
+    with subprocess.Popen(["idf.py", "-B", cmake_path, "build"], stdout=subprocess.PIPE, stderr=subprocess.STDOUT, shell=shell_needed) as process:
         build_output = wait_for_process(process)
         # The return code is never expected to be 0 due to a bug in the elf cmake script, but we keep it just in case
         if process.returncode == 0:
@@ -389,12 +400,13 @@ def build_consecutively(version, platform, skip_build):
         print(f"Using SDK at {sdk_dir}")
     os.environ["TACTILITY_SDK_PATH"] = sdk_dir
     sdkconfig_path = os.path.join(ttbuild_path, f"sdkconfig.app.{platform}")
-    os.system(f"cp {sdkconfig_path} sdkconfig")
+    shutil.copy(sdkconfig_path, "sdkconfig")
     if skip_build:
         return True
     cmake_path = get_cmake_path(platform)
     print_status_busy(f"Building {platform} ELF")
-    with subprocess.Popen(["idf.py", "-B", cmake_path, "elf"], stdout=subprocess.PIPE, stderr=subprocess.STDOUT) as process:
+    shell_needed = sys.platform == "win32"
+    with subprocess.Popen(["idf.py", "-B", cmake_path, "elf"], stdout=subprocess.PIPE, stderr=subprocess.STDOUT, shell=shell_needed) as process:
         build_output = wait_for_process(process)
         if process.returncode == 0:
             print_status_success(f"Building {platform} ELF")
