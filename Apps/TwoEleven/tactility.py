@@ -12,7 +12,7 @@ import requests
 import tarfile
 
 ttbuild_path = ".tactility"
-ttbuild_version = "2.4.0"
+ttbuild_version = "2.5.0"
 ttbuild_cdn = "https://cdn.tactility.one"
 ttbuild_sdk_json_validity = 3600  # seconds
 ttport = 6666
@@ -601,7 +601,7 @@ def uninstall_action(manifest, ip):
         else:
             print_status_success("Uninstalled")
     except requests.RequestException as e:
-        print_status_success(f"Uninstall request failed: {e}")
+        print_status_error(f"Uninstall request failed: {e}")
 
 #region Main
 
