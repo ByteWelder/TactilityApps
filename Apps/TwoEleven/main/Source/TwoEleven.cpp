@@ -97,17 +97,17 @@ void TwoEleven::create_selection(lv_obj_t* parent, lv_obj_t* toolbar) {
     lv_obj_t* selection = lv_obj_create(parent);
     lv_obj_set_size(selection, LV_PCT(100), LV_PCT(100));
     lv_obj_set_flex_flow(selection, LV_FLEX_FLOW_COLUMN);
-    lv_obj_set_flex_align(selection, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER);
+    lv_obj_set_flex_grow(selection, 1);
     lv_obj_remove_flag(selection, LV_OBJ_FLAG_SCROLLABLE);
-    lv_obj_set_style_pad_all(selection, 2, LV_PART_MAIN);
+    lv_obj_set_style_pad_all(selection, 0, LV_PART_MAIN);
     lv_obj_set_style_border_width(selection, 0, LV_STATE_DEFAULT);
 
     lv_obj_t* titleWrapper = lv_obj_create(selection);
     lv_obj_set_size(titleWrapper, LV_PCT(100), LV_SIZE_CONTENT);
-    lv_obj_set_style_pad_all(titleWrapper, 2, LV_STATE_DEFAULT);
+    lv_obj_set_style_pad_all(titleWrapper, 0, LV_STATE_DEFAULT);
     lv_obj_set_style_border_width(titleWrapper, 0, LV_STATE_DEFAULT);
     lv_obj_set_style_bg_opa(titleWrapper, 0, LV_STATE_DEFAULT);
-    lv_obj_set_flex_flow(titleWrapper, LV_FLEX_FLOW_ROW);
+    lv_obj_set_flex_flow(titleWrapper, LV_FLEX_FLOW_COLUMN);
     lv_obj_set_flex_align(titleWrapper, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER);
     lv_obj_remove_flag(titleWrapper, LV_OBJ_FLAG_SCROLLABLE);
 
@@ -116,17 +116,36 @@ void TwoEleven::create_selection(lv_obj_t* parent, lv_obj_t* toolbar) {
     lv_obj_align(titleLabel, LV_ALIGN_CENTER, 0, 0);
     lv_obj_set_size(titleLabel, LV_SIZE_CONTENT, LV_SIZE_CONTENT);
 
+    lv_obj_t* controlsWrapper = lv_obj_create(titleWrapper);
+    lv_obj_set_size(controlsWrapper, LV_PCT(100), LV_SIZE_CONTENT);
+    lv_obj_set_style_pad_all(controlsWrapper, 0, LV_STATE_DEFAULT);
+    lv_obj_set_style_border_width(controlsWrapper, 0, LV_STATE_DEFAULT);
+    lv_obj_set_style_bg_opa(controlsWrapper, 0, LV_STATE_DEFAULT);
+    lv_obj_set_flex_flow(controlsWrapper, LV_FLEX_FLOW_COLUMN);
+    lv_obj_set_flex_align(controlsWrapper, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER);
+    lv_obj_remove_flag(controlsWrapper, LV_OBJ_FLAG_SCROLLABLE);
+
+    lv_obj_t* touchControlsLabel = lv_label_create(controlsWrapper);
+    lv_label_set_text(touchControlsLabel, "Touchscreen:\nSwipe up, down, left, right to move tiles.");
+    lv_obj_set_style_text_font(touchControlsLabel, lv_font_get_default(), 0);
+    lv_obj_set_style_text_align(touchControlsLabel, LV_TEXT_ALIGN_CENTER, 0);
+
+    lv_obj_t* keyControlsLabel = lv_label_create(controlsWrapper);
+    lv_label_set_text_fmt(keyControlsLabel, "Keyboard:\nUse arrow keys (%s, %s, %s, %s) to move tiles.", LV_SYMBOL_UP, LV_SYMBOL_DOWN, LV_SYMBOL_LEFT, LV_SYMBOL_RIGHT);
+    lv_obj_set_style_text_font(keyControlsLabel, lv_font_get_default(), 0);
+    lv_obj_set_style_text_align(keyControlsLabel, LV_TEXT_ALIGN_CENTER, 0);
+
     lv_obj_t* buttonContainer = lv_obj_create(selection);
     lv_obj_set_flex_flow(buttonContainer, LV_FLEX_FLOW_ROW);
     lv_obj_set_flex_align(buttonContainer, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER);
     lv_obj_remove_flag(buttonContainer, LV_OBJ_FLAG_SCROLLABLE);
-    lv_obj_set_size(buttonContainer, LV_PCT(100), LV_PCT(100) - 20);
+    lv_obj_set_size(buttonContainer, LV_PCT(100), LV_SIZE_CONTENT);
     lv_obj_set_style_bg_opa(buttonContainer, 0, LV_STATE_DEFAULT);
     lv_obj_set_style_border_width(buttonContainer, 0, LV_STATE_DEFAULT);
 
     for(int s = 3; s <= 6; s++) {
         lv_obj_t* btn = lv_btn_create(buttonContainer);
-        lv_obj_set_size(btn, 60, 50);
+        lv_obj_set_size(btn, 60, 40);
         lv_obj_t* lbl = lv_label_create(btn);
         char txt[10];
         sprintf(txt, "%dx%d", s, s);
