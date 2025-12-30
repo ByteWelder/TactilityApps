@@ -38,8 +38,12 @@ static void delete_event(lv_event_t * e)
 lv_obj_t * twoeleven_create(lv_obj_t * parent, uint16_t matrix_size)
 {
     lv_obj_t * obj = lv_obj_create(parent);
+    if (!obj) return NULL;
     twoeleven_t * game_2048 = (twoeleven_t *)lv_malloc(sizeof(twoeleven_t));
-    if (!game_2048) return NULL;
+    if (!game_2048) {
+        lv_obj_delete(obj);
+        return NULL;
+    }
     lv_obj_set_user_data(obj, game_2048);
 
     game_2048->score = 0;
@@ -53,8 +57,20 @@ lv_obj_t * twoeleven_create(lv_obj_t * parent, uint16_t matrix_size)
 
     // Allocate matrix
     game_2048->matrix = lv_malloc(game_2048->matrix_size * sizeof(uint16_t*));
+    if (!game_2048->matrix) {
+        lv_free(game_2048);
+        lv_obj_delete(obj);
+        return NULL;
+    }
     for (uint16_t i = 0; i < game_2048->matrix_size; i++) {
         game_2048->matrix[i] = lv_malloc(game_2048->matrix_size * sizeof(uint16_t));
+        if (!game_2048->matrix[i]) {
+            for (uint16_t j = 0; j < i; j++) lv_free(game_2048->matrix[j]);
+            lv_free(game_2048->matrix);
+            lv_free(game_2048);
+            lv_obj_delete(obj);
+            return NULL;
+        }
     }
 
     // Allocate button map

@@ -469,7 +469,7 @@ def package_all(platforms):
         print_status_success(status)
         return True
     except Exception as e:
-        print_status_error(f"Building package failed: {e.message}")
+        print_status_error(f"Building package failed: {e}")
         return False
 
 #endregion Packaging
@@ -543,7 +543,7 @@ def get_device_info(ip):
             print_status_success(f"Received device info:")
             print(response.json())
     except requests.RequestException as e:
-        print_status_error(f"Device info request failed: {e.message}")
+        print_status_error(f"Device info request failed: {e}")
 
 def run_action(manifest, ip):
     app_id = manifest["app"]["id"]
@@ -557,7 +557,7 @@ def run_action(manifest, ip):
         else:
             print_status_success("Running")
     except requests.RequestException as e:
-        print_status_error(f"Running request failed: {e.message}")
+        print_status_error(f"Running request failed: {e}")
 
 def install_action(ip, platforms):
     print_status_busy("Installing")
@@ -578,15 +578,15 @@ def install_action(ip, platforms):
             response = requests.put(url, files=files)
             if response.status_code != 200:
                 print_status_error("Install failed")
-                return True
+                return False
             else:
                 print_status_success("Installing")
                 return True
     except requests.RequestException as e:
-        print_status_error(f"Install request failed: {e.message}")
+        print_status_error(f"Install request failed: {e}")
         return False
     except IOError as e:
-        print_status_error(f"Install file error: {e.message}")
+        print_status_error(f"Install file error: {e}")
         return False
 
 def uninstall_action(manifest, ip):
@@ -601,7 +601,7 @@ def uninstall_action(manifest, ip):
         else:
             print_status_success("Uninstalled")
     except requests.RequestException as e:
-        print_status_success(f"Uninstall request failed: {e.message}")
+        print_status_success(f"Uninstall request failed: {e}")
 
 #region Main
 
