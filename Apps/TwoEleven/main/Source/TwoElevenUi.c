@@ -154,10 +154,10 @@ static void game_play_event(lv_event_t * e)
             lv_dir_t dir = lv_indev_get_gesture_dir(lv_indev_active());
             switch (dir) {
                 case LV_DIR_TOP:
-                    success = move_left(&(game_2048->score), game_2048->matrix_size, game_2048->matrix);
+                    success = move_right(&(game_2048->score), game_2048->matrix_size, game_2048->matrix);
                     break;
                 case LV_DIR_BOTTOM:
-                    success = move_right(&(game_2048->score), game_2048->matrix_size, game_2048->matrix);
+                    success = move_left(&(game_2048->score), game_2048->matrix_size, game_2048->matrix);
                     break;
                 case LV_DIR_LEFT:
                     success = move_up(&(game_2048->score), game_2048->matrix_size, game_2048->matrix);
@@ -177,10 +177,10 @@ static void game_play_event(lv_event_t * e)
         if (!game_2048->game_over) {
             switch (*((const uint8_t *) lv_event_get_param(e))) {
                 case LV_KEY_UP:
-                    success = move_left(&(game_2048->score), game_2048->matrix_size, game_2048->matrix);
+                    success = move_right(&(game_2048->score), game_2048->matrix_size, game_2048->matrix);
                     break;
                 case LV_KEY_DOWN:
-                    success = move_right(&(game_2048->score), game_2048->matrix_size, game_2048->matrix);
+                    success = move_left(&(game_2048->score), game_2048->matrix_size, game_2048->matrix);
                     break;
                 case LV_KEY_LEFT:
                     success = move_up(&(game_2048->score), game_2048->matrix_size, game_2048->matrix);
