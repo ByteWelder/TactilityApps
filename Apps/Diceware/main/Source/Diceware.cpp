@@ -52,25 +52,23 @@ static Str readWordAtLine(const AppHandle handle, const int lineIndex) {
     return word;
 }
 
-int32_t Diceware::jobMain(void* data) {
-    Diceware* application = static_cast<Diceware*>(data);
+int32_t Diceware::jobMain() {
     Str result;
-    for (int i = 0; i < application->wordCount; i++) {
+    for (int i = 0; i < wordCount; i++) {
         constexpr int line_count = 7776;
         const auto line_index = esp_random() % line_count;
-        auto word = readWordAtLine(application->handle, line_index);
+        auto word = readWordAtLine(handle, line_index);
         result.appendf("%s ", word.c_str());
     }
 
-    application->onFinishJob(result);
+    onFinishJob(result);
 
     return 0;
 }
 
 void Diceware::cleanupJob() {
     if (jobThread != nullptr) {
-        tt_thread_join(jobThread, TT_MAX_TICKS);
-        tt_thread_free(jobThread);
+        jobThread->join();
         jobThread = nullptr;
     }
 }
@@ -79,8 +77,10 @@ void Diceware::startJob(uint32_t jobWordCount) {
     cleanupJob();
 
     wordCount = jobWordCount;
-    jobThread = tt_thread_alloc_ext("Diceware", 4096, jobMain, this);
-    tt_thread_start(jobThread);
+    jobThread = std::make_unique<tt::Thread>("Diceware", 4096, [this] {
+        return jobMain();
+    });
+    jobThread->start();
 }
 
 void Diceware::onFinishJob(Str result) {

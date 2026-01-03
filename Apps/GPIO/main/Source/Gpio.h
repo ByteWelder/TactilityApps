@@ -3,9 +3,9 @@
 #include <TactilityCpp/App.h>
 
 #include <tt_app.h>
-#include <tt_timer.h>
 
-#include <TactilityCpp/Mutex.h>
+#include <Tactility/RecursiveMutex.h>
+#include <Tactility/Timer.h>
 
 #include <lvgl.h>
 #include <vector>
@@ -14,11 +14,13 @@ class Gpio final : public App {
 
     std::vector<lv_obj_t*> pinWidgets;
     std::vector<bool> pinStates;
-    TimerHandle timer;
-    Mutex mutex = Mutex(MutexTypeRecursive);
+    tt::Timer timer = tt::Timer(tt::Timer::Type::Periodic, pdMS_TO_TICKS(100), [this]{
+        onTimer();
+    });
+    tt::RecursiveMutex mutex;
 
     static lv_obj_t* createGpioRowWrapper(lv_obj_t* parent);
-    static void onTimer(void* parameter);
+    void onTimer();
 
 public:
 

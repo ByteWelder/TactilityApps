@@ -1,21 +1,19 @@
 #pragma once
 
-#include <TactilityCpp/Lock.h>
+#include <Tactility/Lock.h>
 #include <tt_lvgl.h>
 
-class LvglLock final : public Lock {
+class LvglLock final : public tt::Lock {
 
 public:
 
-    bool lock(TickType timeout = TT_MAX_TICKS) const override {
-        tt_lvgl_lock(timeout);
-        return true;
+    bool lock(TickType_t timeout = tt::kernel::MAX_TICKS) const override {
+        return tt_lvgl_lock(timeout);
     }
 
 
-    bool unlock() const override {
+    void unlock() const override {
         tt_lvgl_unlock();
-        return true;
     }
 };
 

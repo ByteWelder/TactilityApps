@@ -2,6 +2,7 @@
 
 #include <cassert>
 #include <tt_hal_display.h>
+#include <Tactility/kernel/Kernel.h>
 
 /**
  * Wrapper for tt_hal_display_driver_*
@@ -22,7 +23,7 @@ public:
         tt_hal_display_driver_free(handle);
     }
 
-    bool lock(TickType timeout = TT_MAX_TICKS) const {
+    bool lock(TickType_t timeout = tt::kernel::MAX_TICKS) const {
         return tt_hal_display_driver_lock(handle, timeout);
     }
 

@@ -1,6 +1,7 @@
 #include "Gpio.h"
 
-#include <tt_app_alertdialog.h>
+#include <Tactility/kernel/Kernel.h>
+
 #include <tt_hal.h>
 #include <tt_hal_gpio.h>
 #include <tt_lvgl.h>
@@ -18,7 +19,7 @@ void Gpio::updatePinStates() {
 }
 
 void Gpio::updatePinWidgets() {
-    tt_lvgl_lock(TT_MAX_TICKS);
+    tt_lvgl_lock(tt::kernel::MAX_TICKS);
     for (int j = 0; j < pinStates.size(); ++j) {
         int level = pinStates[j];
         lv_obj_t* label = pinWidgets[j];
@@ -46,28 +47,21 @@ lv_obj_t* Gpio::createGpioRowWrapper(lv_obj_t* parent) {
 
 // region Task
 
-void Gpio::onTimer(void* context) {
-    Gpio* app = static_cast<Gpio*>(context);
-
-    app->mutex.lock();
-    app->updatePinStates();
-    app->updatePinWidgets();
-    app->mutex.unlock();
+void Gpio::onTimer() {
+    mutex.lock();
+    updatePinStates();
+    updatePinWidgets();
+    mutex.unlock();
 }
 
 void Gpio::startTask() {
     mutex.lock();
-    assert(timer == nullptr);
-    timer = tt_timer_alloc(TimerTypePeriodic, onTimer, this);
-    tt_timer_start(timer, 100 / portTICK_PERIOD_MS);
+    timer.start();
     mutex.unlock();
 }
 
 void Gpio::stopTask() {
-    assert(timer);
-    tt_timer_stop(timer);
-    tt_timer_free(timer);
-    timer = nullptr;
+    timer.stop();
 }
 
 // endregion Task

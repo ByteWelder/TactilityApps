@@ -8,11 +8,12 @@ import subprocess
 import time
 import urllib.request
 import zipfile
+from dataclasses import dataclass
 import requests
 import tarfile
 
 ttbuild_path = ".tactility"
-ttbuild_version = "2.5.0"
+ttbuild_version = "3.0.0"
 ttbuild_cdn = "https://cdn.tactility.one"
 ttbuild_sdk_json_validity = 3600  # seconds
 ttport = 6666
@@ -20,20 +21,12 @@ verbose = False
 use_local_sdk = False
 local_base_path = None
 
-if sys.platform == "win32":
-    shell_color_red = "\033[91m"
-    shell_color_orange = "\033[93m"
-    shell_color_green = "\033[32m"
-    shell_color_purple = "\033[35m"
-    shell_color_cyan = "\033[36m"
-    shell_color_reset = "\033[m"
-else:
-    shell_color_red = "\033[91m"
-    shell_color_orange = "\033[93m"
-    shell_color_green = "\033[32m"
-    shell_color_purple = "\033[35m"
-    shell_color_cyan = "\033[36m"
-    shell_color_reset = "\033[m"
+shell_color_red = "\033[91m"
+shell_color_orange = "\033[93m"
+shell_color_green = "\033[32m"
+shell_color_purple = "\033[35m"
+shell_color_cyan = "\033[36m"
+shell_color_reset = "\033[m"
 
 def print_help():
     print("Usage: python tactility.py [action] [options]")
@@ -115,7 +108,7 @@ def read_properties_file(path):
 #region SDK helpers
 
 def read_sdk_json():
-    json_file_path = os.path.join(ttbuild_path, "sdk.json")
+    json_file_path = os.path.join(ttbuild_path, "tool.json")
     json_file = open(json_file_path)
     return json.load(json_file)
 
@@ -148,17 +141,17 @@ def get_sdk_root_dir(version, platform):
     global ttbuild_cdn
     return os.path.join(ttbuild_path, f"{version}-{platform}")
 
-def get_sdk_url(version, platform):
+def get_sdk_url(version, file):
     global ttbuild_cdn
-    return f"{ttbuild_cdn}/TactilitySDK-{version}-{platform}.zip"
+    return f"{ttbuild_cdn}/sdk/{version}/{file}"
 
 def sdk_exists(version, platform):
     sdk_dir = get_sdk_dir(version, platform)
     return os.path.isdir(sdk_dir)
 
-def should_update_sdk_json():
+def should_update_tool_json():
     global ttbuild_cdn
-    json_filepath = os.path.join(ttbuild_path, "sdk.json")
+    json_filepath = os.path.join(ttbuild_path, "tool.json")
     if os.path.exists(json_filepath):
         json_modification_time = os.path.getmtime(json_filepath)
         now = time.time()
@@ -168,10 +161,10 @@ def should_update_sdk_json():
     else:
         return True
 
-def update_sdk_json():
+def update_tool_json():
     global ttbuild_cdn, ttbuild_path
-    json_url = f"{ttbuild_cdn}/sdk.json"
-    json_filepath = os.path.join(ttbuild_path, "sdk.json")
+    json_url = f"{ttbuild_cdn}/sdk/tool.json"
+    json_filepath = os.path.join(ttbuild_path, "tool.json")
     return download_file(json_url, json_filepath)
 
 def should_fetch_sdkconfig_files(platform_targets):
@@ -205,16 +198,6 @@ def validate_environment():
         print_warning("If you want to use it, use the '--local-sdk' parameter")
     elif use_local_sdk == True and os.environ.get("TACTILITY_SDK_PATH") is None:
         exit_with_error("local build was requested, but TACTILITY_SDK_PATH environment variable is not set.")
-
-def validate_version_and_platforms(sdk_json, sdk_version, platforms_to_build):
-    version_map = sdk_json["versions"]
-    if not sdk_version in version_map:
-        exit_with_error(f"Version not found: {sdk_version}")
-    version_data = version_map[sdk_version]
-    available_platforms = version_data["platforms"]
-    for desired_platform in platforms_to_build:
-        if not desired_platform in available_platforms:
-            exit_with_error(f"Platform {desired_platform} is not available. Available ones: {available_platforms}")
 
 def validate_self(sdk_json):
     if not "toolVersion" in sdk_json:
@@ -287,15 +270,32 @@ def get_manifest_target_platforms(manifest, requested_platform):
 def sdk_download(version, platform):
     sdk_root_dir = get_sdk_root_dir(version, platform)
     os.makedirs(sdk_root_dir, exist_ok=True)
-    sdk_url = get_sdk_url(version, platform)
-    filepath = os.path.join(sdk_root_dir, f"{version}-{platform}.zip")
+    sdk_index_url = get_sdk_url(version, "index.json")
     print(f"Downloading SDK version {version} for {platform}")
-    if download_file(sdk_url, filepath):
-        with zipfile.ZipFile(filepath, "r") as zip_ref:
-            zip_ref.extractall(os.path.join(sdk_root_dir, "TactilitySDK"))
-        return True
-    else:
+    sdk_index_filepath = os.path.join(sdk_root_dir, "index.json")
+    if verbose:
+        print(f"Downloading {sdk_index_url} to {sdk_index_filepath}")
+    if not download_file(sdk_index_url, sdk_index_filepath):
+        # TODO: 404 check, print a more accurate error
+        print_error(f"Failed to download SDK version {version}. Check your internet connection and make sure this release exists.")
         return False
+    sdk_index_json_file = open(sdk_index_filepath)
+    sdk_index_json = json.load(sdk_index_json_file)
+    sdk_platforms = sdk_index_json["platforms"]
+    if not platform in sdk_platforms:
+        print_error(f"Platform {platform} not found in {sdk_platforms} for version {version}")
+        return False
+    sdk_platform_file = sdk_platforms[platform]
+    sdk_zip_source_url = get_sdk_url(version, sdk_platform_file)
+    sdk_zip_target_filepath = os.path.join(sdk_root_dir, f"{version}-{platform}.zip")
+    if verbose:
+        print(f"Downloading {sdk_zip_source_url} to {sdk_zip_target_filepath}")
+    if not download_file(sdk_zip_source_url, sdk_zip_target_filepath):
+        print_error(f"Failed to download {sdk_zip_source_url} to {sdk_zip_target_filepath}")
+        return False
+    with zipfile.ZipFile(sdk_zip_target_filepath, "r") as zip_ref:
+        zip_ref.extractall(os.path.join(sdk_root_dir, "TactilitySDK"))
+    return True
 
 def sdk_download_all(version, platforms):
     for platform in platforms:
@@ -494,12 +494,9 @@ def build_action(manifest, platform_arg):
     if not use_local_sdk:
         sdk_json = read_sdk_json()
         validate_self(sdk_json)
-        if not "versions" in sdk_json:
-            exit_with_error("Version data not found in sdk.json")
     # Build
     sdk_version = manifest["target"]["sdk"]
     if not use_local_sdk:
-        validate_version_and_platforms(sdk_json, sdk_version, platforms_to_build)
         if not sdk_download_all(sdk_version, platforms_to_build):
             exit_with_error("Failed to download one or more SDKs")
     if not build_all(sdk_version, platforms_to_build, skip_build):  # Environment validation
@@ -633,8 +630,8 @@ if __name__ == "__main__":
     manifest = read_manifest()
     validate_manifest(manifest)
     all_platform_targets = manifest["target"]["platforms"].split(",")
-    # Update SDK cache (sdk.json)
-    if should_update_sdk_json() and not update_sdk_json():
+    # Update SDK cache (tool.json)
+    if should_update_tool_json() and not update_tool_json():
         exit_with_error("Failed to retrieve SDK info")
     # Actions
     if action_arg == "build":

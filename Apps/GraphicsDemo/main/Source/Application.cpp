@@ -2,7 +2,7 @@
 #include "PixelBuffer.h"
 #include "esp_log.h"
 
-#include <tt_kernel.h>
+#include <Tactility/kernel/Kernel.h>
 
 constexpr auto TAG = "Application";
 
@@ -66,7 +66,7 @@ void runApplication(DisplayDriver* display, TouchDriver* touch) {
 
         // Give other tasks space to breathe
         // SPI displays would otherwise time out SPI SD card access
-        tt_kernel_delay_ticks(1);
+        tt::kernel::delayTicks(1);
     } while (!isTouched(touch));
 }
 
