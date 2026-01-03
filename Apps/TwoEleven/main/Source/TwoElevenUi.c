@@ -177,10 +177,10 @@ static void game_play_event(lv_event_t * e)
         if (!game_2048->game_over) {
             switch (*((const uint8_t *) lv_event_get_param(e))) {
                 case LV_KEY_UP:
-                    success = move_left(&(game_2048->score), game_2048->matrix_size, game_2048->matrix);
+                    success = move_right(&(game_2048->score), game_2048->matrix_size, game_2048->matrix);
                     break;
                 case LV_KEY_DOWN:
-                    success = move_right(&(game_2048->score), game_2048->matrix_size, game_2048->matrix);
+                    success = move_left(&(game_2048->score), game_2048->matrix_size, game_2048->matrix);
                     break;
                 case LV_KEY_LEFT:
                     success = move_up(&(game_2048->score), game_2048->matrix_size, game_2048->matrix);
