@@ -4,7 +4,7 @@
 
 #include <lvgl.h>
 #include <deque>
-#include <Str.h>
+#include <string>
 #include <TactilityCpp/App.h>
 
 class Calculator final : public App {
@@ -18,8 +18,8 @@ class Calculator final : public App {
     void handleInput(const char* txt);
     void evaluateExpression();
     double computeFormula();
-    static std::deque<Str> infixToRPN(const Str& infix);
-    static double evaluateRPN(std::deque<Str> rpnQueue);
+    static std::deque<std::string> infixToRPN(const std::string& infix);
+    static double evaluateRPN(std::deque<std::string> rpnQueue);
     void resetCalculator();
 
 public:

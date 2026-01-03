@@ -13,7 +13,7 @@ import requests
 import tarfile
 
 ttbuild_path = ".tactility"
-ttbuild_version = "3.0.0"
+ttbuild_version = "3.1.0"
 ttbuild_cdn = "https://cdn.tactility.one"
 ttbuild_sdk_json_validity = 3600  # seconds
 ttport = 6666
@@ -109,8 +109,8 @@ def read_properties_file(path):
 
 def read_sdk_json():
     json_file_path = os.path.join(ttbuild_path, "tool.json")
-    json_file = open(json_file_path)
-    return json.load(json_file)
+    with open(json_file_path) as json_file:
+        return json.load(json_file)
 
 def get_sdk_dir(version, platform):
     global use_local_sdk, local_base_path
@@ -279,10 +279,10 @@ def sdk_download(version, platform):
         # TODO: 404 check, print a more accurate error
         print_error(f"Failed to download SDK version {version}. Check your internet connection and make sure this release exists.")
         return False
-    sdk_index_json_file = open(sdk_index_filepath)
-    sdk_index_json = json.load(sdk_index_json_file)
+    with open(sdk_index_filepath) as sdk_index_json_file:
+        sdk_index_json = json.load(sdk_index_json_file)
     sdk_platforms = sdk_index_json["platforms"]
-    if not platform in sdk_platforms:
+    if platform not in sdk_platforms:
         print_error(f"Platform {platform} not found in {sdk_platforms} for version {version}")
         return False
     sdk_platform_file = sdk_platforms[platform]

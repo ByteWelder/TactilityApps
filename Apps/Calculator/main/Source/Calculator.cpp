@@ -4,6 +4,7 @@
 #include <ctype.h>
 #include <tt_lvgl_toolbar.h>
 #include <stack>
+#include <cstring>
 
 constexpr auto* TAG = "Calculator";
 
@@ -45,10 +46,10 @@ void Calculator::handleInput(const char* txt) {
     }
 }
 
-std::deque<Str> Calculator::infixToRPN(const Str& infix) {
+std::deque<std::string> Calculator::infixToRPN(const std::string& infix) {
     std::stack<char> opStack;
-    std::deque<Str> output;
-    Str token;
+    std::deque<std::string> output;
+    std::string token;
     size_t i = 0;
 
     while (i < infix.length()) {
@@ -56,20 +57,20 @@ std::deque<Str> Calculator::infixToRPN(const Str& infix) {
 
         if (isdigit(ch)) {
             token.clear();
-            while (i < infix.length() && (isdigit(infix[i]) || infix[i] == '.')) { token.append(infix[i++]); }
+            while (i < infix.length() && (isdigit(infix[i]) || infix[i] == '.')) { token += infix[i++]; }
             output.push_back(token);
             continue;
         }
 
         if (ch == '(') { opStack.push(ch); } else if (ch == ')') {
             while (!opStack.empty() && opStack.top() != '(') {
-                output.push_back(Str(1, opStack.top()));
+                output.push_back(std::string(1, opStack.top()));
                 opStack.pop();
             }
             opStack.pop();
         } else if (strchr("+-*/", ch)) {
             while (!opStack.empty() && precedence(opStack.top()) >= precedence(ch)) {
-                output.push_back(Str(1, opStack.top()));
+                output.push_back(std::string(1, opStack.top()));
                 opStack.pop();
             }
             opStack.push(ch);
@@ -79,18 +80,18 @@ std::deque<Str> Calculator::infixToRPN(const Str& infix) {
     }
 
     while (!opStack.empty()) {
-        output.push_back(Str(1, opStack.top()));
+        output.push_back(std::string(1, opStack.top()));
         opStack.pop();
     }
 
     return output;
 }
 
-double Calculator::evaluateRPN(std::deque<Str> rpnQueue) {
+double Calculator::evaluateRPN(std::deque<std::string> rpnQueue) {
     std::stack<double> values;
 
     while (!rpnQueue.empty()) {
-        Str token = rpnQueue.front();
+        std::string token = rpnQueue.front();
         rpnQueue.pop_front();
 
         if (isdigit(token[0])) {
@@ -132,7 +133,7 @@ void Calculator::evaluateExpression() {
 }
 
 double Calculator::computeFormula() {
-    return evaluateRPN(infixToRPN(Str(formulaBuffer)));
+    return evaluateRPN(infixToRPN(std::string(formulaBuffer)));
 }
 
 void Calculator::resetCalculator() {
