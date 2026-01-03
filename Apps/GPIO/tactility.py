@@ -8,7 +8,6 @@ import subprocess
 import time
 import urllib.request
 import zipfile
-from dataclasses import dataclass
 import requests
 import tarfile
 
