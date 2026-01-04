@@ -615,7 +615,7 @@ if __name__ == "__main__":
     # Argument validation
     if len(sys.argv) == 1:
         print_help()
-        sys.exit()
+        sys.exit(1)
     if "--verbose" in sys.argv:
         verbose = True
         sys.argv.remove("--verbose")
@@ -646,7 +646,8 @@ if __name__ == "__main__":
         platform = None
         if len(sys.argv) > 2:
             platform = sys.argv[2]
-        build_action(manifest, platform)
+        if not build_action(manifest, platform):
+            sys.exit(1)
     elif action_arg == "clean":
         clean_action()
     elif action_arg == "clearcache":
