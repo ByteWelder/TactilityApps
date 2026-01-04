@@ -20,15 +20,15 @@ static void skipNewlines(FILE* file, const int count) {
     }
 }
 
-static Str readWord(FILE* file) {
+static std::string readWord(FILE* file) {
     char c;
-    Str result;
+    std::string result;
     // Read word until newline
     while (fread(&c, 1, 1, file) && c != '\n') { result.append(c); }
     return result;
 }
 
-static Str readWordAtLine(const AppHandle handle, const int lineIndex) {
+static std::string readWordAtLine(const AppHandle handle, const int lineIndex) {
     char path[256];
     size_t size = 256;
     tt_app_get_assets_child_path(handle, "eff_large_wordlist.txt", path, &size);
@@ -38,7 +38,7 @@ static Str readWordAtLine(const AppHandle handle, const int lineIndex) {
     }
 
     auto lock = tt_lock_alloc_for_path(path);
-    Str word;
+    std::string word;
     if (tt_lock_acquire(lock, TT_MAX_TICKS)) {
         FILE* file = fopen(path, "r");
         if (file != nullptr) {
@@ -53,7 +53,7 @@ static Str readWordAtLine(const AppHandle handle, const int lineIndex) {
 }
 
 int32_t Diceware::jobMain() {
-    Str result;
+    std::string result;
     for (int i = 0; i < wordCount; i++) {
         constexpr int line_count = 7776;
         const auto line_index = esp_random() % line_count;
@@ -83,7 +83,7 @@ void Diceware::startJob(uint32_t jobWordCount) {
     jobThread->start();
 }
 
-void Diceware::onFinishJob(Str result) {
+void Diceware::onFinishJob(std::string result) {
     tt_lvgl_lock(TT_MAX_TICKS);
     lv_label_set_text(resultLabel, result.c_str());
     tt_lvgl_unlock();

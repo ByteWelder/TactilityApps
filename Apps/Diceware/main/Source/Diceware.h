@@ -4,7 +4,7 @@
 
 #include <Tactility/Thread.h>
 
-#include <Str.h>
+#include <string>
 #include <lvgl.h>
 #include <TactilityCpp/App.h>
 
@@ -26,7 +26,7 @@ class Diceware final : public App {
     int32_t jobMain();
 
     void startJob(uint32_t jobWordCount);
-    void onFinishJob(Str result);
+    void onFinishJob(std::string result);
     void cleanupJob();
 
 public:
