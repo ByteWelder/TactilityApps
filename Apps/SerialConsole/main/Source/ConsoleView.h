@@ -25,9 +25,9 @@ class ConsoleView final : public View {
     lv_obj_t* _Nullable logTextarea = nullptr;
     lv_obj_t* _Nullable inputTextarea = nullptr;
     std::shared_ptr<Uart> _Nullable uart = nullptr;
-    std::shared_ptr<tt::Thread> uartThread _Nullable = nullptr;
+    std::unique_ptr<tt::Thread> uartThread _Nullable = nullptr;
     bool uartThreadInterrupted = false;
-    std::shared_ptr<tt::Thread> viewThread _Nullable = nullptr;
+    std::unique_ptr<tt::Thread> viewThread _Nullable = nullptr;
     bool viewThreadInterrupted = false;
     tt::RecursiveMutex mutex;
     uint8_t receiveBuffer[receiveBufferSize];

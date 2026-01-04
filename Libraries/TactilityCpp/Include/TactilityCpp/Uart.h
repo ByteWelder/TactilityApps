@@ -1,6 +1,7 @@
 #pragma once
 
 #include <tt_hal_uart.h>
+#include <memory>
 #include <string>
 #include <vector>
 #include <freertos/FreeRTOS.h>
