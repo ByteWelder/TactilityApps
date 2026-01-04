@@ -3,7 +3,7 @@
 #include "View.h"
 #include "esp_log.h"
 
-#include <Str.h>
+#include <string>
 #include <sstream>
 #include <lvgl.h>
 #include <memory>
@@ -33,7 +33,7 @@ class ConsoleView final : public View {
     uint8_t receiveBuffer[receiveBufferSize];
     uint8_t renderBuffer[renderBufferSize];
     size_t receiveBufferPosition = 0;
-    Str terminatorString = "\n";
+    std::string terminatorString = "\n";
 
     LvglLock lvglLock;
 
@@ -141,9 +141,9 @@ class ConsoleView final : public View {
 
     void onSendClicked() {
         mutex.lock();
-        Str input_text = lv_textarea_get_text(inputTextarea);
-        Str to_send;
-        to_send.appendf("%s%s", input_text.c_str(), terminatorString.c_str());
+        std::string input_text = lv_textarea_get_text(inputTextarea);
+        std::string to_send;
+        to_send.append(input_text + terminatorString);
         mutex.unlock();
 
         if (uart != nullptr) {

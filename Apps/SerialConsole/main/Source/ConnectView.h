@@ -5,7 +5,6 @@
 #include <string>
 #include <vector>
 #include <lvgl.h>
-#include <Str.h>
 #include <functional>
 #include <memory>
 
@@ -21,7 +20,7 @@ class ConnectView final : public View {
 public:
 
     typedef std::function<void(std::unique_ptr<Uart>)> OnConnectedFunction;
-    std::vector<Str> uartNames;
+    std::vector<std::string> uartNames;
     Preferences preferences = Preferences("SerialConsole");
     LvglLock lvglLock;
 
@@ -31,8 +30,8 @@ private:
     lv_obj_t* busDropdown = nullptr;
     lv_obj_t* speedTextarea = nullptr;
 
-    Str join(const std::vector<Str>& list) {
-        Str output;
+    std::string join(const std::vector<std::string>& list) {
+        std::string output;
         for (int i = list.size() - 1; i >= 0; i--) {
             output.append(list[i].c_str());
             if (i < list.size() - 1) {

@@ -1,7 +1,7 @@
 #pragma once
 
 #include <tt_hal_uart.h>
-#include <Str.h>
+#include <string>
 #include <vector>
 #include <freertos/FreeRTOS.h>
 
@@ -21,13 +21,13 @@ public:
         return std::make_unique<Uart>(handle);
     }
 
-    static std::vector<Str> getNames() {
-        std::vector<Str> names;
+    static std::vector<std::string> getNames() {
+        std::vector<std::string> names;
         size_t count = tt_hal_uart_get_count();
         for (size_t i = 0; i < count; i++) {
             char buffer[64];
             if (tt_hal_uart_get_name(i, buffer, sizeof(buffer))) {
-                names.push_back(Str(buffer));
+                names.push_back(std::string(buffer));
             }
         }
         return names;
