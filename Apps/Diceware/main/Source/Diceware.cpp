@@ -8,6 +8,8 @@
 #include <esp_random.h>
 #include <esp_log.h>
 
+#include <Tactility/kernel/Kernel.h>
+
 constexpr char* TAG = "Diceware";
 
 static void skipNewlines(FILE* file, const int count) {
@@ -39,7 +41,7 @@ static std::string readWordAtLine(const AppHandle handle, const int lineIndex) {
 
     auto lock = tt_lock_alloc_for_path(path);
     std::string word;
-    if (tt_lock_acquire(lock, TT_MAX_TICKS)) {
+    if (tt_lock_acquire(lock, tt::kernel::MAX_TICKS)) {
         FILE* file = fopen(path, "r");
         if (file != nullptr) {
             skipNewlines(file, lineIndex);
@@ -85,7 +87,7 @@ void Diceware::startJob(uint32_t jobWordCount) {
 }
 
 void Diceware::onFinishJob(std::string result) {
-    tt_lvgl_lock(TT_MAX_TICKS);
+    tt_lvgl_lock(tt::kernel::MAX_TICKS);
     lv_label_set_text(resultLabel, result.c_str());
     tt_lvgl_unlock();
 }
