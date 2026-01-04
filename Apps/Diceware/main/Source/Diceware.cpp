@@ -24,7 +24,7 @@ static std::string readWord(FILE* file) {
     char c;
     std::string result;
     // Read word until newline
-    while (fread(&c, 1, 1, file) && c != '\n') { result.append(c); }
+    while (fread(&c, 1, 1, file) && c != '\n') { result += c; }
     return result;
 }
 
@@ -58,7 +58,8 @@ int32_t Diceware::jobMain() {
         constexpr int line_count = 7776;
         const auto line_index = esp_random() % line_count;
         auto word = readWordAtLine(handle, line_index);
-        result.appendf("%s ", word.c_str());
+        result += word;
+        result += " ";
     }
 
     onFinishJob(result);
