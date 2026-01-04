@@ -81,8 +81,9 @@ class ConsoleView final : public View {
 
             auto end_time = tt::kernel::getTicks();
             auto time_diff = end_time - start_time;
-            if (time_diff < 500U) {
-                tt::kernel::delayTicks((500U - time_diff) / portTICK_PERIOD_MS);
+            auto target_delay = tt::kernel::millisToTicks(500U);
+            if (time_diff < target_delay) {
+                tt::kernel::delayTicks(target_delay - time_diff);
             }
         }
 
@@ -94,7 +95,7 @@ class ConsoleView final : public View {
 
         while (!isUartThreadInterrupted()) {
             assert(uart != nullptr);
-            bool success = uart->readByte(&byte, 50 / portTICK_PERIOD_MS);
+            bool success = uart->readByte(&byte, tt::kernel::millisToTicks(50));
 
             // Thread might've been interrupted in the meanwhile
             if (isUartThreadInterrupted()) {
